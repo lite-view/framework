@@ -1,0 +1,25 @@
+{
+    "name": "lite-view/framework",
+    "description": "Lightweight web framework",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "monolog/monolog": "^2.5"
+    },
+    "authors": [
+        {
+            "name": "jaifire",
+            "email": "jaifiresong@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "LiteView\\Kernel\\": "src/Kernel",
+            "LiteView\\Aides\\": "src/Aides"
+        },
+        "files": [
+            "src/environment.php"
+        ]
+    }
+}
