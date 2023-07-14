@@ -1,6 +1,6 @@
 <?php
 
-namespace LiteView\Aides;
+namespace LiteView\Utils;
 
 
 use Monolog\Logger;
@@ -28,11 +28,11 @@ class Log
     // 当我们调用一个不存在的静态方法时，会自动调用 __callstatic()
     public static function __callstatic($method, $args)
     {
-        $logger = self::by();
+        $logger = self::employ();
         return call_user_func_array([$logger, $method], $args);
     }
 
-    public static function by($name = 'default')
+    public static function employ($name = 'default'): Logger
     {
         if (!isset(self::$logging[$name])) {
             $config = cfg('logging');
