@@ -4,7 +4,7 @@
 PHP mini vc 框架
 
 ## 项目状态
-项目版本**没有遵循** [语义化版本号](https://semver.org/lang/zh-CN/)
+项目版本**遵循** [语义化版本号](https://semver.org/lang/zh-CN/)
 
 ## 安装
 `composer require lite-view/framework`
