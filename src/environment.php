@@ -41,7 +41,7 @@ set_exception_handler(function ($exception) {
         ];
     }
 
-    LiteView\Aides\Log::by('main')->error('SystemError', $msg);
+    LiteView\Utils\Log::employ('main')->error('SystemError', $msg);
     if (cfg('debug')) {
         echo json_encode($msg);
     } else {
