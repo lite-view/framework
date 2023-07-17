@@ -16,7 +16,7 @@
     "autoload": {
         "psr-4": {
             "LiteView\\Kernel\\": "src/Kernel",
-            "LiteView\\Aides\\": "src/Utils"
+            "LiteView\\Utils\\": "src/Utils"
         },
         "files": [
             "src/environment.php"

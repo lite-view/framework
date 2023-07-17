@@ -24,7 +24,7 @@ class a
 }
 
 LiteView\Kernel\Route::get('/', function (LiteView\Kernel\Visitor $visitor) {
-    LiteView\Log\Log::error('xxx');
+    \LiteView\Utils\Log::error('xxx');
     var_dump($visitor->currentPath());//
 });
 
