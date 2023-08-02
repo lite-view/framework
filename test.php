@@ -3,4 +3,6 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-\LiteView\Aides\Log::error('xxx');
+use LiteView\Utils\Log;
+
+Log::error('xxx');

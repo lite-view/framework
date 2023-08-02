@@ -4,6 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
+        "php": ">=7.2",
         "monolog/monolog": "^2.5"
     },
     "authors": [
