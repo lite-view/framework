@@ -68,6 +68,9 @@ function domain()
     if (!empty($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) {
         $scheme = 'https';
     }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']) {
+        $scheme = 'https';
+    }
     return cfg('app_url', "$scheme://$_SERVER[HTTP_HOST]");
 }
 
