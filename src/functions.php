@@ -18,11 +18,10 @@ class ToolMan
 
     public static function getCfg()
     {
-        if (!is_null(self::$cfg)) {
-            return self::$cfg;
+        if (is_null(self::$cfg)) {
+            $string = file_get_contents(root_path('/config.json'));
+            self::$cfg = json_decode($string, true);
         }
-        $string = file_get_contents(root_path('/config.json'));
-        self::$cfg = json_decode($string, true);
         return self::$cfg;
     }
 
@@ -30,7 +29,7 @@ class ToolMan
     {
         $cfg = self::getCfg();
         if (isset($cfg[$name])) {
-            trigger_error("the name `$name` already exists in the configuration.", E_USER_ERROR);
+            trigger_error("The name `$name` already exists in the configuration.", E_USER_ERROR);
         }
         self::$cfg[$name] = $value;
     }
@@ -75,7 +74,7 @@ function domain()
 }
 
 
-function debug()
+function dump()
 {
     $args = func_get_args();
     foreach ($args as $one) {
