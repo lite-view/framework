@@ -1,7 +1,6 @@
 <?php
 
 
-//入口文件所在的路径
 function root_path($path = '/')
 {
     if (defined('WORKING_DIR')) {
@@ -12,33 +11,9 @@ function root_path($path = '/')
 }
 
 
-class ToolMan
-{
-    private static $cfg = null; //配置信息
-
-    public static function getCfg()
-    {
-        if (is_null(self::$cfg)) {
-            $string = file_get_contents(root_path('/config.json'));
-            self::$cfg = json_decode($string, true);
-        }
-        return self::$cfg;
-    }
-
-    public static function setCfg($name, $value)
-    {
-        $cfg = self::getCfg();
-        if (isset($cfg[$name])) {
-            trigger_error("The name `$name` already exists in the configuration.", E_USER_ERROR);
-        }
-        self::$cfg[$name] = $value;
-    }
-}
-
-
 function cfg($key = null, $default = null)
 {
-    $data = ToolMan::getCfg();
+    $data = LiteView\Support\ToolMan::getCfg();
     if (is_null($key)) {
         return $data;
     }

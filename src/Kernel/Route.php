@@ -58,7 +58,7 @@ class Route
     {
         $methods = get_class_methods($controller);
         foreach ($methods as $action) {
-            self::any(rtrim($path, '/') . "/$action", "$controller@$action", $middleware);
+            self::any(rtrim($path, '/') . "/$action", [$controller, $action], $middleware);
         }
     }
 
