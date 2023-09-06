@@ -8,7 +8,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use LiteView\Kernel\Route;
 
 Route::get('/', function (LiteView\Kernel\Visitor $visitor) {
-    \LiteView\Utils\Log::error('xxx');
+    echo print_r(cfg());
     var_dump($visitor->currentPath());//
 });
 
@@ -55,11 +55,8 @@ Route::get('/a/b/c', function (LiteView\Kernel\Visitor $visitor) {
 });
 
 // 获取路由
-$route = Route::current_route();
-list($action, $middleware) = array_values($route);
-$visitor = new \LiteView\Kernel\Visitor();
-\LiteView\Support\Dispatcher::checkEnv();
-$rsp = \LiteView\Support\Dispatcher::work($visitor, $action);
+list($action, $middleware) = array_values(Route::current_route());
+$rsp = \LiteView\Support\Dispatcher::work(new \LiteView\Kernel\Visitor(), $action);
 echo $rsp;
 
 

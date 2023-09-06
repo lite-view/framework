@@ -89,12 +89,28 @@ class Visitor
         return $default;
     }
 
-    public function only($need = [])
+    public function only(array $only = [], $null_fill = true)
     {
         $arr = [];
         $data = $this->input();
-        foreach ($need as $field) {
+        foreach ($only as $field) {
             if (isset($data[$field])) {
+                $arr[$field] = $data[$field];
+            } else {
+                if ($null_fill) {
+                    $arr[$field] = null;
+                }
+            }
+        }
+        return $arr;
+    }
+
+    public function except(array $except = [])
+    {
+        $arr = [];
+        $data = $this->input();
+        foreach ($data as $field => $value) {
+            if (!in_array($field, $except)) {
                 $arr[$field] = $data[$field];
             }
         }

@@ -50,3 +50,5 @@ set_exception_handler(function ($exception) {
     exit();
 });
 
+
+\LiteView\Support\Dispatcher::checkEnv();

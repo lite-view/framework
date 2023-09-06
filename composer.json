@@ -1,6 +1,6 @@
 {
     "name": "lite-view/framework",
-    "description": "Lightweight web framework",
+    "description": "Lightweight web vc framework",
     "type": "library",
     "license": "MIT",
     "require": {
