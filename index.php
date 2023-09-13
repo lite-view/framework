@@ -8,7 +8,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 use LiteView\Kernel\Route;
 
 Route::get('/', function (LiteView\Kernel\Visitor $visitor) {
-    echo print_r(cfg());
     var_dump($visitor->currentPath());//
 });
 
@@ -46,7 +45,8 @@ Route::get('/error', function (LiteView\Kernel\Visitor $visitor) {
 });
 
 Route::get('/exception', function (LiteView\Kernel\Visitor $visitor) {
-    echo1(1);
+    echo1(2);
+    echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 });
 
 Route::get('/a/b/c', function (LiteView\Kernel\Visitor $visitor) {
