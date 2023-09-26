@@ -12,10 +12,11 @@ class Visitor
     const SESSION_USER_ID = 'session419028750685ec5af44e5bff70e8a296';
     private $_id; //注意不能用empty函数来判断
     public $user;
+    private $data = [];
 
     public function __construct()
     {
-        # 登录
+        # SESSION 登录
         if (!isset($_SESSION)) {
             session_start();
         }
@@ -49,14 +50,15 @@ class Visitor
         if ('id' == $attribute) {
             return (int)$this->_id;
         }
-        return $this->$attribute;
+        return $this->data[$attribute];
     }
 
     public function __set($attribute, $value)
     {
-        $this->$attribute = $value;
         if ('id' == $attribute) {
             $this->login($value);
+        } else {
+            $this->data[$attribute] = $value;
         }
     }
 
@@ -84,7 +86,7 @@ class Visitor
 
     public function input($key = null, $default = null)
     {
-        $input = array_merge($_GET, $_POST);
+        $input = array_merge($_GET, $_POST, $this->data);
         $json = json_decode(file_get_contents("php://input"), true);
         if (is_array($json)) {
             $input = array_merge($input, $json);
