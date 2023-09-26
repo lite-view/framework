@@ -24,6 +24,15 @@ class Visitor
         }
     }
 
+    public function ip($long = false)
+    {
+        $ip = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? $_SERVER["REMOTE_ADDR"];
+        if ($long) {
+            return ip2long($ip); // 逆函数：long2ip()
+        }
+        return $ip;
+    }
+
     public function login($uid)
     {
         $_SESSION[Visitor::SESSION_USER_ID] = $uid;
