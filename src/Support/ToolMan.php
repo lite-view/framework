@@ -11,6 +11,9 @@ class ToolMan
     public static function getCfg()
     {
         if (is_null(self::$cfg)) {
+            if (!file_exists(root_path('/config.json'))) {
+                exit('缺少配置文件！请在项目根目录添加配置文件 config.json');
+            }
             $string = file_get_contents(root_path('/config.json'));
             self::$cfg = json_decode($string, true);
         }
