@@ -142,8 +142,13 @@ class Visitor
         return $path . '?' . http_build_query($params);
     }
 
-    public function currentPath()
+    public function currentPath($no_prefix = false)
     {
+        $pre = cfg('location');
+        if ($pre && $no_prefix) {
+            $pre = '/' . trim($pre, '/');
+            return str_replace($pre, '', Route::current_path());
+        }
         return Route::current_path();
     }
 }
