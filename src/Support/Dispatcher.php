@@ -11,9 +11,11 @@ class Dispatcher
     {
         $env_config = root_path() . 'config.' . cfg('app_env') . '.json';
         if (file_exists($env_config)) {
-            $string = file_get_contents($env_config);
-            $config = json_decode($string, true);
-            foreach ($config as $name => $value) {
+            $arr = json_decode(file_get_contents($env_config), true);
+            if (!is_array($arr)) {
+                exit("环境配置文件解析失败($env_config)！请检查json格式是否有误");
+            }
+            foreach ($arr as $name => $value) {
                 ToolMan::setCfg($name, $value);
             }
         }

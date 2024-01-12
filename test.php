@@ -5,4 +5,5 @@ require __DIR__ . '/vendor/autoload.php';
 
 use LiteView\Utils\Log;
 
-Log::error('xxx');
+
+var_dump(cfg());
