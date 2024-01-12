@@ -1,5 +1,5 @@
 # lite-view/framework
-[应实例参考](https://github.com/lite-view/lite-view)
+[应用实例参考](https://github.com/lite-view/lite-view)
 
 ## 介绍
 PHP mini vc 框架
