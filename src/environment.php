@@ -53,6 +53,7 @@ set_exception_handler(function (Throwable $e) {
 });
 
 
+//注册一个在PHP脚本执行完毕后执行的回调函数，无论是正常结束还是非正常结束（如服务器崩溃等）都会执行该回调函数
 register_shutdown_function(function () {
 
 });

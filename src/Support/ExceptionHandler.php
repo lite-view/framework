@@ -8,6 +8,11 @@ class ExceptionHandler
 {
     public function handle(array $e, \Throwable $exception = null)
     {
-        echo json_encode($e);
+        $errMsg = json_encode($e);
+        if ($errMsg) {
+            echo $errMsg;
+        } else {
+            var_dump($e);
+        }
     }
 }
