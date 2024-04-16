@@ -8,7 +8,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 use LiteView\Kernel\Route;
 
 Route::get('/', function (LiteView\Kernel\Visitor $visitor) {
-    var_dump($visitor->currentPath());//
+    var_dump($visitor->currentPath());
+    require_once __DIR__ . "/adapay_sdk_php_v1.4.4/AdapaySdk/init.php";
 });
 
 
