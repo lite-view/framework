@@ -9,7 +9,7 @@ class Validate
     public static function number($val, $pattern = [])
     {
         $required = $pattern['required'] ?? false;
-        $tail = $pattern['tail'] ?? 2;
+        $tail = $pattern['tail'] ?? 0;
         $min = $pattern['min'] ?? 0;
         $max = $pattern['max'] ?? 99999999;
 
@@ -65,6 +65,19 @@ class Validate
             return "不能为空";
         }
         if ($val && !preg_match('/^1\d{10}$/', $val)) {
+            return "不正确";
+        }
+        return 0;
+    }
+
+    public static function url($val, $pattern = [])
+    {
+        $required = $pattern['required'] ?? false;
+
+        if ($required && '' === strval($val)) {
+            return "不能为空";
+        }
+        if ($val && !preg_match('/https?:\/\/.+\..+/',$val)){
             return "不正确";
         }
 

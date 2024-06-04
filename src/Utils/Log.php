@@ -6,7 +6,6 @@ namespace LiteView\Utils;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\RotatingFileHandler;
 use Monolog\Processor\MemoryUsageProcessor;
 
 
@@ -34,52 +33,57 @@ class Log
 
     public static function employ($name = 'default'): Logger
     {
-        if (!isset(self::$logging[$name])) {
-            $config = cfg('logging');
-            $config['main'] = [
-                "Handler" => StreamHandler::class,
-                "path" => root_path("storage/logs/main.log"),
-                "level" => Logger::DEBUG,
-                "processors" => [
-                    MemoryUsageProcessor::class
-                ]
-            ];
-            $channel = $config[$name];
-
-            // 创建 logger
-            $logger = new Logger($name);
-            
-            // 创建 handler
-            $Handler_arr = $channel['Handler'];
-            if(!is_array($Handler_arr)){
-                $Handler_arr = [$Handler_arr];
-            }
-            foreach($Handler_arr as $Handler){
-                if (RotatingFileHandler::class === $Handler) {
-                    $stream = new RotatingFileHandler($channel['path'], $channel['days'] ?? 7, $channel['level']);
-                } else {
-                    $stream = new $Handler($channel['path'], $channel['level']);
-                }
-                $stream->setFormatter(self::line_formatter());
-                $logger->pushHandler($stream);
-            }
-
-            // push processor
-            if (isset($channel['processors'])) {
-                foreach ($channel['processors'] as $class) {
-                    $logger->pushProcessor(new $class());
-                }
-            }
-            self::$logging[$name] = $logger;
+        if (isset(self::$logging[$name])) {
+            return self::$logging[$name];
         }
+        $config = cfg('logging');
+        $config['main'] = self::mainCfg();
+        $channel = $config[$name];
+
+        // 创建 logger
+        $logger = new Logger($name);
+
+        // push handler
+        $handler_arr = $channel['handlers'];
+        if (!is_array($handler_arr)) {
+            $handler_arr = [$handler_arr];
+        }
+        foreach ($handler_arr as $handler) {
+            $handler->setFormatter(self::lineFormatter($channel));
+            $logger->pushHandler($handler);
+        }
+
+        // push processor
+        if (isset($channel['processors'])) {
+            foreach ($channel['processors'] as $class) {
+                $logger->pushProcessor(new $class());
+            }
+        }
+
+        self::$logging[$name] = $logger;
         return self::$logging[$name];
     }
 
-    protected static function line_formatter()
+    protected static function mainCfg(): array
+    {
+        return [
+            "handlers" => [
+                new StreamHandler(root_path("storage/logs/main.log"), Logger::DEBUG),
+            ],
+            "processors" => [
+                MemoryUsageProcessor::class
+            ]
+        ];
+    }
+
+    protected static function lineFormatter($channel): LineFormatter
     {
         $dateFormat = "Y-m-d H:i:s";
         // the default output format is "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n"
         $output = "%datetime% > %level_name% > %message% %context% %extra%\n";
+        if (!empty($channel['format'])) {
+            $output = $channel['format'];
+        }
         return new LineFormatter($output, $dateFormat);
     }
 }
