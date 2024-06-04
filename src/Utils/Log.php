@@ -46,17 +46,23 @@ class Log
             ];
             $channel = $config[$name];
 
-            // 创建 handler
-            if (RotatingFileHandler::class === $channel['Handler']) {
-                $stream = new RotatingFileHandler($channel['path'], $channel['days'] ?? 7, $channel['level']);
-            } else {
-                $stream = new $channel['Handler']($channel['path'], $channel['level']);
-            }
-            $stream->setFormatter(self::line_formatter());
-
             // 创建 logger
             $logger = new Logger($name);
-            $logger->pushHandler($stream);
+            
+            // 创建 handler
+            $Handler_arr = $channel['Handler'];
+            if(!is_array($Handler_arr)){
+                $Handler_arr = [$Handler_arr];
+            }
+            foreach($Handler_arr as $Handler){
+                if (RotatingFileHandler::class === $Handler) {
+                    $stream = new RotatingFileHandler($channel['path'], $channel['days'] ?? 7, $channel['level']);
+                } else {
+                    $stream = new $Handler($channel['path'], $channel['level']);
+                }
+                $stream->setFormatter(self::line_formatter());
+                $logger->pushHandler($stream);
+            }
 
             // push processor
             if (isset($channel['processors'])) {
@@ -66,7 +72,6 @@ class Log
             }
             self::$logging[$name] = $logger;
         }
-
         return self::$logging[$name];
     }
 
