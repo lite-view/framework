@@ -44,11 +44,13 @@ class Log
         $logger = new Logger($name);
 
         // push handler
-        $handler_arr = $channel['handlers'];
-        if (!is_array($handler_arr)) {
-            $handler_arr = [$handler_arr];
+        $handlers = $channel['handlers'];
+        if (is_callable($handlers)) {
+            $handlers = $handlers();
+        } elseif (!is_array($handlers)) {
+            $handlers = [$handlers];
         }
-        foreach ($handler_arr as $handler) {
+        foreach ($handlers as $handler) {
             $handler->setFormatter(self::lineFormatter($channel));
             $logger->pushHandler($handler);
         }

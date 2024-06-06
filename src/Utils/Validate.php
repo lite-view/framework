@@ -16,20 +16,21 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if (!is_numeric($val)) {
-            return '请输入数字';
-        }
-        if ($val < $min) {
-            return '不能小于' . $min;
-        }
-        if ($val > $max) {
-            return '不能大于' . $max;
-        }
-
-        $arr = explode('.', $val);
-        if (!empty($arr[1])) {
-            if (strlen($arr[1]) > $tail) {
-                return '最多保留小数点后' . $tail . '位';
+        if ($val) {
+            if (!is_numeric($val)) {
+                return '请输入数字';
+            }
+            if ($val < $min) {
+                return '不能小于' . $min;
+            }
+            if ($val > $max) {
+                return '不能大于' . $max;
+            }
+            $arr = explode('.', $val);
+            if (!empty($arr[1])) {
+                if (strlen($arr[1]) > $tail) {
+                    return '最多保留小数点后' . $tail . '位';
+                }
             }
         }
 
@@ -45,13 +46,14 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-
-        $len = mb_strlen($val, 'utf-8');
-        if ($min_len && $min_len > $len) {
-            return "最多{$min_len}字符";
-        }
-        if ($max_len && $max_len < $len) {
-            return "最多{$max_len}字符";
+        if ($val) {
+            $len = mb_strlen($val, 'utf-8');
+            if ($min_len && $min_len > $len) {
+                return "最多{$min_len}字符";
+            }
+            if ($max_len && $max_len < $len) {
+                return "最多{$max_len}字符";
+            }
         }
 
         return 0;
@@ -64,8 +66,10 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val && !preg_match('/^1\d{10}$/', $val)) {
-            return "不正确";
+        if ($val) {
+            if (!preg_match('/^1\d{10}$/', $val)) {
+                return "不正确";
+            }
         }
         return 0;
     }
@@ -77,8 +81,10 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val && !preg_match('/https?:\/\/.+\..+/',$val)){
-            return "不正确";
+        if ($val) {
+            if (!preg_match('/https?:\/\/.+\..+/', $val)) {
+                return "不正确";
+            }
         }
 
         return 0;
@@ -92,8 +98,10 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val && !in_array($val, $list)) {
-            return "不正确";
+        if ($val) {
+            if (!in_array($val, $list)) {
+                return "不正确";
+            }
         }
         return 0;
     }
