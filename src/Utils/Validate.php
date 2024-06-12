@@ -16,7 +16,7 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val) {
+        if ('' !== strval($val)) {
             if (!is_numeric($val)) {
                 return '请输入数字';
             }
@@ -33,7 +33,6 @@ class Validate
                 }
             }
         }
-
         return 0;
     }
 
@@ -46,7 +45,7 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val) {
+        if ('' !== strval($val)) {
             $len = mb_strlen($val, 'utf-8');
             if ($min_len && $min_len > $len) {
                 return "最多{$min_len}字符";
@@ -55,7 +54,6 @@ class Validate
                 return "最多{$max_len}字符";
             }
         }
-
         return 0;
     }
 
@@ -66,7 +64,7 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val) {
+        if ('' !== strval($val)) {
             if (!preg_match('/^1\d{10}$/', $val)) {
                 return "不正确";
             }
@@ -81,12 +79,11 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val) {
+        if ('' !== strval($val)) {
             if (!preg_match('/https?:\/\/.+\..+/', $val)) {
                 return "不正确";
             }
         }
-
         return 0;
     }
 
@@ -98,7 +95,7 @@ class Validate
         if ($required && '' === strval($val)) {
             return "不能为空";
         }
-        if ($val) {
+        if ('' !== strval($val)) {
             if (!in_array($val, $list)) {
                 return "不正确";
             }
@@ -126,7 +123,6 @@ class Validate
         if (!checkdate($parts[2], $parts[3], $parts[1])) {
             return "不正确";
         }
-
         return 0;
     }
 
