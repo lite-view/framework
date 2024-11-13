@@ -25,14 +25,10 @@ function cfg($key = null, $default = null)
 }
 
 
-function lite_view($view, $variables = [], $layout = null)
+function lite_view($view, $variables = [])
 {
     $v = new LiteView\Kernel\View();
-    if (is_null($layout)) {
-        $v->renderPartial($view, $variables);
-    } else {
-        $v->render($view, $layout, $variables);
-    }
+    $v->render($view, $variables);
 }
 
 

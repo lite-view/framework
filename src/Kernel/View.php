@@ -3,42 +3,39 @@
 
 namespace LiteView\Kernel;
 
-ob_start();
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+
 
 class View
 {
-    public $path;
+    protected $path;
+    protected $twig;
 
     public function __construct()
     {
-        $this->path = root_path('resources/views/');
+        $this->path = root_path(cfg('template_path', 'resources/views/'));
+        $this->twig = new Environment(new FilesystemLoader($this->path));
     }
 
-    /**
-     * 渲染php文件，并返回渲染后的内容
-     * @param string $view
-     * @param array $variables
-     * @return false|string
-     */
-    private function renderFile(string $view, array $variables = [])
+    public function renderFile(string $view, array $variables = [])
     {
         ob_start();
+        //ob_start 是 PHP 中的一个输出缓冲函数。它开启了一个输出缓冲区，用于存储由 PHP 脚本产生的输出内容(echo、print、var_dump...)，而不是直接将这些内容发送到浏览器或者其他输出设备。
+        //ob_get_clean 函数获取并清空缓冲区
+
         ob_implicit_flush(false);
         extract($variables);
         require $this->path . $view;
         return ob_get_clean();
     }
 
-    //视图渲染，带布局文件
-    public function render($view, $layout, $variables = [])
+    public function render(string $view, array $variables = [])
     {
-        extract($variables);
-        $content = $this->renderFile($view, $variables);
-        require $this->path . $layout;
+        echo $this->twig->load($view)->render($variables);
     }
 
-    //视图渲染，不带布局文件
-    public function renderPartial($view, $variables = [])
+    public function renderPhp(string $view, array $variables = [])
     {
         extract($variables);
         require $this->path . $view;

@@ -6,6 +6,7 @@
     "require": {
         "php": ">=7.2",
         "monolog/monolog": "^2.5",
+        "twig/twig": "^3.11",
         "ext-json": "*"
     },
     "authors": [
