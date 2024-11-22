@@ -4,6 +4,9 @@
 namespace LiteView\Kernel;
 
 use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Loader\FilesystemLoader;
 
 
@@ -18,6 +21,16 @@ class View
         $this->twig = new Environment(new FilesystemLoader($this->path));
     }
 
+    /**
+     * @throws SyntaxError
+     * @throws RuntimeError
+     * @throws LoaderError
+     */
+    public function render(string $view, array $variables = [])
+    {
+        echo $this->twig->load($view)->render($variables);
+    }
+
     public function renderFile(string $view, array $variables = [])
     {
         ob_start();
@@ -28,11 +41,6 @@ class View
         extract($variables);
         require $this->path . $view;
         return ob_get_clean();
-    }
-
-    public function render(string $view, array $variables = [])
-    {
-        echo $this->twig->load($view)->render($variables);
     }
 
     public function renderPhp(string $view, array $variables = [])
