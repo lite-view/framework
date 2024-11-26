@@ -1,56 +1,131 @@
 <?php
-/**
- * 路由管理
- */
 
 namespace LiteView\Kernel;
 
+
 class Route
 {
-    public static $prefix; //字符串，分组时使用
-    public static $middleware;  //数组，分组时使用
-    public static $routes = [];
+    private static $routes = [];
+    private static $prefix = [];
+    private static $middleware = [];
 
-    public static function get($path, $action, $middleware = [])
+    private static function add($path, $target)
     {
-        $path = self::fix_path($path);
-        self::$routes['get'][$path] = [
-            'action' => $action,
-            'middleware' => self::merge_middleware($middleware)
-        ];
+        $path = self::fixPath($path);
+        if (!empty($target['regular'])) {
+            $path = "$path>>>" . json_encode($target['regular']);
+        }
+
+        if (isset(self::$routes[$path])) {
+            trigger_error("Route already exists: $path", E_USER_ERROR);
+        }
+        $target['middleware'] = self::mergeMiddleware($target['middleware']);
+        self::$routes[$path]  = $target;
     }
 
-    public static function post($path, $action, $middleware = [])
+    private static function mergeMiddleware($middleware): array
     {
-        $path = self::fix_path($path);
-        self::$routes['post'][$path] = [
-            'action' => $action,
-            'middleware' => self::merge_middleware($middleware)
-        ];
+        if (is_array($middleware)) {
+            return array_unique(array_merge(self::$middleware, $middleware));
+        }
+        return array_unique(self::$middleware);
     }
 
-    public static function any($path, $action, $middleware = [])
+    private static function fixPath($path): string
     {
-        self::get($path, $action, $middleware);
-        self::post($path, $action, $middleware);
+        $path = '/' . trim($path, '/');
+        if (self::$prefix) {
+            // 只有分组时才会带 prefix ， prefix 不能以 / 开头或结尾
+            $prefix = implode('/', self::$prefix);
+            $path   = '/' . $prefix . $path;
+        }
+        // 同一个项目不同目录
+        $location = trim(cfg('location', ''), '/');
+        if ($location) {
+            $path = '/' . $location . $path;
+        }
+        return '/' . trim($path, '/');
     }
 
-    public static function group($params, $register)
+    private static function filterMethod(array $target, string $method, string $path)
     {
-        $bak_prefix = self::$prefix;
+        $pass = $target['method'];
+        if (is_string($pass)) {
+            $pass = [$pass];
+        }
+        foreach ($pass as $key) {
+            $pass[strtolower($key)] = 1;
+        }
+        if (isset($pass[$method]) || isset($pass['*'])) {
+            return $target;
+        }
+        trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+    }
+
+    public static function matchParamRoute($path, $method)
+    {
+        foreach (self::$routes as $key => $target) {
+            $pattern = preg_replace_callback(
+                '#/{(.+?)}#',
+                function ($arg) use ($target) {
+                    $arr = explode('?', $arg[1]);
+                    if (!empty($target['regular'][$arr[0]])) {
+                        $reg = $target['regular'][$arr[0]];
+                        return "/($reg)";
+                    }
+                    $reg = '[0-9a-zA-Z\._-]';
+                    if (count($arr) > 1) {
+                        return "[/]*($reg*)";
+                    }
+                    return "/($reg+)";
+                },
+                $key
+            );
+            $pattern = explode('>>>', $pattern)[0];
+            $success = preg_match("#$pattern#", $path, $parameters);
+            if ($success && $path === $parameters[0]) {
+                return [self::filterMethod($target, $method, $path), $parameters];
+            }
+        }
+        // trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+        return [null, null];
+    }
+
+    public static function rule($method, $path, $action, $middleware = [], $regular = [])
+    {
+        self::add($path, ['action' => $action, 'middleware' => $middleware, 'regular' => $regular, 'method' => $method]);
+    }
+
+    public static function get($path, $action, $middleware = [], $regular = [])
+    {
+        self::add($path, ['action' => $action, 'middleware' => $middleware, 'regular' => $regular, 'method' => ['GET']]);
+    }
+
+    public static function post($path, $action, $middleware = [], $regular = [])
+    {
+        self::add($path, ['action' => $action, 'middleware' => $middleware, 'regular' => $regular, 'method' => ['POST']]);
+    }
+
+    public static function any($path, $action, $middleware = [], $regular = [])
+    {
+        self::add($path, ['action' => $action, 'middleware' => $middleware, 'regular' => $regular, 'method' => '*']);
+    }
+
+    public static function group($params, callable $register)
+    {
+        $bak_prefix     = self::$prefix;
         $bak_middleware = self::$middleware;
         if (is_string($params)) {
             self::$prefix[] = $params;
-        }
-        if (is_array($params)) {
+        } else if (is_array($params)) {
             self::$prefix[] = $params['prefix'];
             if (isset($params['middleware'])) {
-                self::$middleware = self::merge_middleware($params['middleware']);
+                self::$middleware = self::mergeMiddleware($params['middleware']);
             }
         }
         $register();
         // 用完之后还原，避免影响下一次分组
-        self::$prefix = $bak_prefix;
+        self::$prefix     = $bak_prefix;
         self::$middleware = $bak_middleware;
     }
 
@@ -58,58 +133,43 @@ class Route
     {
         $methods = get_class_methods($controller);
         foreach ($methods as $action) {
-            self::any(rtrim($path, '/') . "/$action", [$controller, $action], $middleware);
+            self::rule(['GET', 'POST'], rtrim($path, '/') . "/$action", [$controller, $action], $middleware);
         }
     }
 
-    public static function current_route()
+    public static function match(): array
     {
+        $path   = self::currentPath();
+        $target = self::$routes[$path] ?? '';
         $method = strtolower($_SERVER['REQUEST_METHOD']);
-        $path = self::current_path();
-        // 跨域处理
-        cors($path);
-        // options 请求处理
-        if ('options' === $method) {
-            return [
-                'action' => function () {
-                },
-                'middleware' => []
-            ];
+        if ($target) {
+            return [self::filterMethod($target, $method, $path), null];
         }
-        if (isset(self::$routes[$method][$path])) {
-            return self::$routes[$method][$path];
-        }
-        trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+        return self::matchParamRoute($path, $method);
     }
 
-    public static function current_path()
+    public static function currentPath(): string
     {
         if (isset($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
         } else {
             $request_uri = str_replace($_SERVER['PHP_SELF'], '', $_SERVER['REQUEST_URI']);
-            $arr = explode('?', $request_uri);
-            $path = $arr[0] ?? '/';
+            $arr         = explode('?', $request_uri);
+            $path        = $arr[0] ?? '/';
         }
         return '/' . trim($path, '/');
     }
 
-    private static function fix_path($path)
+    public static function _print()
     {
-        $path = '/' . trim($path, '/');
-        if (!is_null(self::$prefix)) {
-            $prefix = implode('/', self::$prefix);
-            $path = '/' . trim($prefix, '/') . $path;
-        }
-        $path = cfg('location', '') . $path;
-        return '/' . trim($path, '/');
-    }
+        foreach (self::$routes as $k => $v) {
 
-    private static function merge_middleware($middleware)
-    {
-        if (!is_null(self::$middleware)) {
-            $middleware = array_unique(array_merge(self::$middleware, $middleware));
+            if (empty($_SERVER["HTTP_HOST"])) {
+                echo $k, PHP_EOL;
+                echo '    ┕ ', json_encode($v), PHP_EOL;
+            } else {
+
+            }
         }
-        return $middleware;
     }
 }

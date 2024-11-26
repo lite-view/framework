@@ -9,7 +9,6 @@ use LiteView\Kernel\Route;
 
 Route::get('/', function (LiteView\Kernel\Visitor $visitor) {
     var_dump($visitor->currentPath());
-    require_once __DIR__ . "/adapay_sdk_php_v1.4.4/AdapaySdk/init.php";
 });
 
 
@@ -55,8 +54,18 @@ Route::get('/a/b/c', function (LiteView\Kernel\Visitor $visitor) {
     var_dump($visitor->currentPath());
 });
 
+Route::get('/ai_img/{path}', function ($path) {
+    echo 1;
+}, [], ['path' => '.+']);
+Route::get('/ai_img/{path}', function ($path) {
+    echo 1;
+});
+
+
 // 获取路由
-list($action, $middleware) = array_values(Route::current_route());
+var_dump(Route::match());
+die;
+list($action, $middleware) = array_values();
 $rsp = \LiteView\Support\Dispatcher::work(new \LiteView\Kernel\Visitor(), $action);
 echo $rsp;
 

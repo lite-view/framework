@@ -54,7 +54,8 @@ function dump()
     exit();
 }
 
-function p32($num)
+
+function print32($num)
 {
     /*
     & 对应位都为1时结果为1，否则为0
@@ -69,6 +70,7 @@ function p32($num)
     }
     echo PHP_EOL;
 }
+
 
 function cors($path)
 {

@@ -100,7 +100,7 @@ class Visitor
         return $default;
     }
 
-    public function only(array $only = [], $null_fill = true)
+    public function only(array $only = [], $null_fill = true): array
     {
         $arr = [];
         $data = $this->input();
@@ -116,7 +116,7 @@ class Visitor
         return $arr;
     }
 
-    public function except(array $except = [])
+    public function except(array $except = []): array
     {
         $arr = [];
         $data = $this->input();
@@ -128,7 +128,7 @@ class Visitor
         return $arr;
     }
 
-    public function currentUri($params = [])
+    public function currentUri($params = []): string
     {
         $arr = parse_url($_SERVER['REQUEST_URI']);
         $path = $arr['path'] ?? '/';
@@ -147,9 +147,9 @@ class Visitor
         $pre = cfg('location');
         if ($pre && $no_prefix) {
             $pre = '/' . trim($pre, '/');
-            return str_replace($pre, '', Route::current_path());
+            return str_replace($pre, '', Route::currentPath());
         }
-        return Route::current_path();
+        return Route::currentPath();
     }
 }
 

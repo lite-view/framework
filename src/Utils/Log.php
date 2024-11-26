@@ -24,7 +24,7 @@ class Log
 {
     protected static $logging = [];
 
-    // 当我们调用一个不存在的静态方法时，会自动调用 __callstatic()
+    // 当调用一个不存在的静态方法时，会自动调用 __callstatic()
     public static function __callstatic($method, $args)
     {
         $logger = self::employ();

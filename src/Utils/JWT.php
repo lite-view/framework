@@ -10,9 +10,9 @@ class JWT
      * @param array $data
      * @param int $ttl token有效期，单位分钟
      * @param string $guard
-     * @return mixed
+     * @return string
      */
-    public static function create(array $data, $ttl = 1, $guard = 'api')
+    public static function create(array $data, int $ttl = 1, string $guard = 'api'): string
     {
         $data['ttl'] = $ttl;
         $data['guard'] = $guard;
