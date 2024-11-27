@@ -28,7 +28,7 @@ function cfg($key = null, $default = null)
 function lite_view($view, $variables = [])
 {
     $v = new LiteView\Kernel\View();
-    $v->render($view, $variables);
+    return $v->render($view, $variables);
 }
 
 
