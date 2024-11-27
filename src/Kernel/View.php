@@ -26,9 +26,9 @@ class View
      * @throws RuntimeError
      * @throws LoaderError
      */
-    public function render(string $view, array $variables = [])
+    public function render(string $view, array $variables = []): string
     {
-        echo $this->twig->load($view)->render($variables);
+        return $this->twig->load($view)->render($variables);
     }
 
     public function renderFile(string $view, array $variables = [])
