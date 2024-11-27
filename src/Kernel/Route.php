@@ -46,7 +46,7 @@ class Route
         return '/' . trim($path, '/');
     }
 
-    private static function filterMethod(array $target, string $method, string $path)
+    private static function filterMethod(array $target, string $method): ?array
     {
         $pass = $target['method'];
         if (is_string($pass)) {
@@ -58,36 +58,8 @@ class Route
         if (isset($pass[$method]) || isset($pass['*'])) {
             return $target;
         }
-        trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
-    }
-
-    public static function matchParamRoute($path, $method): array
-    {
-        foreach (self::$routes as $key => $target) {
-            $pattern = preg_replace_callback(
-                '#/{(.+?)}#',
-                function ($arg) use ($target) {
-                    $arr = explode('?', $arg[1]);
-                    if (!empty($target['regular'][$arr[0]])) {
-                        $reg = $target['regular'][$arr[0]];
-                        return "/($reg)";
-                    }
-                    $reg = '[0-9a-zA-Z\._-]';
-                    if (count($arr) > 1) {
-                        return "[/]*($reg*)";
-                    }
-                    return "/($reg+)";
-                },
-                $key
-            );
-            $pattern = explode('>>>', $pattern)[0];
-            $success = preg_match("#$pattern#", $path, $parameters);
-            if ($success && $path === $parameters[0]) {
-                return [self::filterMethod($target, $method, $path), $parameters];
-            }
-        }
-        // trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
-        return [null, null];
+        //trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+        return null;
     }
 
     public static function rule($method, $path, $action, $middleware = [], $regular = [])
@@ -139,12 +111,41 @@ class Route
     public static function match(): array
     {
         $path   = self::currentPath();
-        $target = self::$routes[$path] ?? '';
         $method = strtolower($_SERVER['REQUEST_METHOD']);
+        $target = self::$routes[$path] ?? null;
         if ($target) {
-            return [self::filterMethod($target, $method, $path), null];
+            return [self::filterMethod($target, $method), null];
         }
         return self::matchParamRoute($path, $method);
+    }
+
+    public static function matchParamRoute($path, $method): array
+    {
+        foreach (self::$routes as $key => $target) {
+            $pattern = preg_replace_callback(
+                '#/{(.+?)}#',
+                function ($arg) use ($target) {
+                    $arr = explode('?', $arg[1]);
+                    if (!empty($target['regular'][$arr[0]])) {
+                        $reg = $target['regular'][$arr[0]];
+                        return "/($reg)";
+                    }
+                    $reg = '[0-9a-zA-Z\._-]';
+                    if (count($arr) > 1) {
+                        return "[/]*($reg*)";
+                    }
+                    return "/($reg+)";
+                },
+                $key
+            );
+            $pattern = explode('>>>', $pattern)[0];
+            $success = preg_match("#$pattern#", $path, $parameters);
+            if ($success && $path === $parameters[0]) {
+                return [self::filterMethod($target, $method), $parameters];
+            }
+        }
+        // trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+        return [null, null];
     }
 
     public static function currentPath(): string
