@@ -4,6 +4,9 @@
 require_once __DIR__ . '/functions.php';
 
 
+//ob_start 是 PHP 中的一个输出缓冲函数。它开启了一个输出缓冲区，用于存储由 PHP 脚本产生的输出内容(echo、print、var_dump...)，而不是直接将这些内容发送到浏览器或者其他输出设备。
+//ob_get_clean 函数获取并清空缓冲区
+ob_start();
 error_reporting(-1);
 
 
@@ -25,12 +28,12 @@ set_exception_handler(function (Throwable $e) {
     // 进入 set_exception_handler 后不会再执行其它的代码，所以可以不用 exit
     $msg = [
         // 'level' => $e->getSeverity(), Exception 没有这个方法
-        'message' => $e->getMessage(),
+        'message'   => $e->getMessage(),
         'exception' => get_class($e),
-        'code' => $e->getCode(),
-        'file' => $e->getFile() . '(' . $e->getLine() . ')',
-        'line' => $e->getLine(),
-        'trace' => $e->getTrace(),
+        'code'      => $e->getCode(),
+        'file'      => $e->getFile() . '(' . $e->getLine() . ')',
+        'line'      => $e->getLine(),
+        'trace'     => $e->getTrace(),
     ];
 
     \LiteView\Support\ExceptionHandler::exception_print($msg, $e);
