@@ -4,6 +4,9 @@
 namespace LiteView\Support;
 
 
+use LiteView\Kernel\Visitor;
+
+
 class Dispatcher
 {
     // 根据环境加载配置
@@ -22,17 +25,23 @@ class Dispatcher
     }
 
     // 请求处理
-    public static function work($visitor, $action)
+    public static function work(array $target, ?array $params, Visitor $visitor)
     {
-        if (is_callable($action)) {
-            if (is_array($action)) {
-                list($class, $action) = $action;
-                return (new $class($visitor))->$action($visitor);
-            }
-            return $action($visitor);
+        $params[0] = $visitor;
+        $action    = $target['action'];
+
+        if (is_callable($action) && !is_array($action)) {
+            return call_user_func_array($action, $params);
         }
-        list($class, $action) = explode('@', $action);
-        return (new $class($visitor))->$action($visitor);
+
+        if (is_string($action)) {
+            list($class, $method) = explode('@', $action);
+        } else {
+            // is_callable
+            list($class, $method) = $action;
+        }
+
+        return call_user_func_array([new $class($visitor), $method], $params);
     }
 
     // 前置中间件

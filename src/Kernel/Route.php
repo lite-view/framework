@@ -15,7 +15,6 @@ class Route
         if (!empty($target['regular'])) {
             $path = "$path>>>" . json_encode($target['regular']);
         }
-
         if (isset(self::$routes[$path])) {
             trigger_error("Route already exists: $path", E_USER_ERROR);
         }
@@ -62,7 +61,7 @@ class Route
         trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
     }
 
-    public static function matchParamRoute($path, $method)
+    public static function matchParamRoute($path, $method): array
     {
         foreach (self::$routes as $key => $target) {
             $pattern = preg_replace_callback(
@@ -163,13 +162,8 @@ class Route
     public static function _print()
     {
         foreach (self::$routes as $k => $v) {
-
-            if (empty($_SERVER["HTTP_HOST"])) {
-                echo $k, PHP_EOL;
-                echo '    ┕ ', json_encode($v), PHP_EOL;
-            } else {
-
-            }
+            echo $k, PHP_EOL;
+            echo '    ┕ ', json_encode($v), PHP_EOL;
         }
     }
 }

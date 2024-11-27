@@ -95,5 +95,6 @@ class RouteTest extends TestCase
         Route::get('/shudan/{tag}/{id}.html', null);
         $this->assertEquals(['/shudan/t1/1.html', 't1', '1'], Route::matchParamRoute('/shudan/t1/1.html', 'get')[1]);
         $this->assertEquals(['/shudan/t1', 't1'], Route::matchParamRoute('/shudan/t1', 'get')[1]);
+        Route::_print();
     }
 }

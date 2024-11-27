@@ -54,19 +54,24 @@ Route::get('/a/b/c', function (LiteView\Kernel\Visitor $visitor) {
     var_dump($visitor->currentPath());
 });
 
-Route::get('/ai_img/{path}', function ($path) {
+Route::get('/ai_img/{path}', function ($a, $b) {
+    var_dump($a, $b);
+});
+Route::get('/ai_img/{path}', function (LiteView\Kernel\Visitor $visitor) {
+    var_dump($visitor->currentPath());
+    var_dump($visitor->currentUri());
     echo 1;
 }, [], ['path' => '.+']);
-Route::get('/ai_img/{path}', function ($path) {
-    echo 1;
-});
 
 
 // 获取路由
-var_dump(Route::match());
-die;
-list($action, $middleware) = array_values();
-$rsp = \LiteView\Support\Dispatcher::work(new \LiteView\Kernel\Visitor(), $action);
-echo $rsp;
+list($target, $params) = Route::match();
+if ($target) {
+    $rsp = \LiteView\Support\Dispatcher::work($target, $params, new \LiteView\Kernel\Visitor());
+    echo $rsp;
+} else {
+    echo 404;
+}
+
 
 

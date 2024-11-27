@@ -6,6 +6,13 @@ namespace LiteView\Utils;
 
 class JWT
 {
+    private static function sign($data): string
+    {
+        ksort($data);
+        $string1 = http_build_query($data) . cfg('jwt_secret');
+        return md5($string1);
+    }
+
     /**
      * @param array $data
      * @param int $ttl token有效期，单位分钟
@@ -14,15 +21,15 @@ class JWT
      */
     public static function create(array $data, int $ttl = 1, string $guard = 'api'): string
     {
-        $data['ttl'] = $ttl;
-        $data['guard'] = $guard;
+        $data['ttl']       = $ttl;
+        $data['guard']     = $guard;
         $data['timestamp'] = time();
-        $data['nonce'] = substr(str_shuffle('qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890'), 0, 6);
-        $data['sign'] = self::sign($data);
+        $data['nonce']     = substr(str_shuffle('qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890'), 0, 6);
+        $data['sign']      = self::sign($data);
         return base64_encode(json_encode($data));
     }
 
-    public static function auth($token, $guard, &$info = null)
+    public static function auth($token, $guard, &$info = null): int
     {
         if (empty($token)) {
             return 1;
@@ -44,20 +51,13 @@ class JWT
         return 0;
     }
 
-    private static function sign($data)
-    {
-        ksort($data);
-        $string1 = http_build_query($data) . cfg('jwt_secret');
-        return md5($string1);
-    }
-
-    public static function passwdMake($passwd)
+    public static function passwdMake($passwd): string
     {
         $md5Key = cfg('app_key');
         return md5(md5($passwd) . $md5Key);
     }
 
-    public static function passwdAuth($value, $hashedValue)
+    public static function passwdAuth($value, $hashedValue): bool
     {
         return self::passwdMake($value) === $hashedValue;
     }
