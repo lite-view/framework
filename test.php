@@ -8,61 +8,82 @@ require __DIR__ . '/vendor/autoload.php';
 
 print32(1);
 
-class X
+
+class Pipeline
 {
-    public static function work($visitor, $target, $params = null)
+    protected $middleware = [];
+    protected $passable;
+
+    /**
+     * 设置需要处理的数据
+     */
+    public function send($passable)
     {
-        $action = $target['action'];
-
-        if (is_callable($action)) {
-            if (is_array($action)) {
-                list($class, $method) = $action;
-                $instance = new $class($visitor);
-                return self::invokeWithParams([$instance, $method], $params);
-            }
-            return self::invokeWithParams($action, $params);
-        }
-
-        list($class, $method) = explode('@', $action);
-        $instance = new $class($visitor);
-        return self::invokeWithParams([$instance, $method], $params);
+        $this->passable = $passable;
+        return $this;
     }
 
-    private static function invokeWithParams($callable, $params)
+    /**
+     * 设置中间件数组
+     */
+    public function through(array $middleware)
     {
-        if (!is_array($params)) {
-            return call_user_func($callable);
-        }
+        $this->middleware = $middleware;
+        return $this;
+    }
 
-        // 使用反射解析参数
-        $reflection = is_array($callable)
-            ? new \ReflectionMethod($callable[0], $callable[1])
-            : new \ReflectionFunction($callable);
+    /**
+     * 定义最终目标（控制器逻辑）
+     */
+    public function then(Closure $destination)
+    {
+        // 将所有中间件反向嵌套成闭包链
+        $pipeline = array_reduce(
+            array_reverse($this->middleware), // 倒序处理
+            function ($next, $middleware) {
+                return function ($passable) use ($next, $middleware) {
+                    return $middleware($passable, $next);
+                };
+            },
+            $destination
+        );
 
-        $args = [];
-        foreach ($reflection->getParameters() as $parameter) {
-            $name = $parameter->getName();
-            if (isset($params[$name])) {
-                $args[] = $params[$name]; // 从 $params 提取对应的值
-            } elseif ($parameter->isDefaultValueAvailable()) {
-                $args[] = $parameter->getDefaultValue(); // 使用默认值
-            } else {
-                throw new \InvalidArgumentException("Missing required parameter: $name");
-            }
-        }
-
-        return call_user_func_array($callable, $args);
+        // 执行闭包链
+        return $pipeline($this->passable);
     }
 }
 
+$middleware1 = function ($request, $next) {
+    echo "Middleware1-Before-";
+    $response = $next($request);
+    echo "Middleware1-After-";
+    return $response;
+};
 
-function f1(Visitor $visitor)
-{
+$middleware2 = function ($request, $next) {
+    echo "Middleware2-Before-";
+    $response = $next($request);
+    echo "Middleware2-After-";
+    return $response;
+};
 
-}
+$middleware3 = function ($request, $next) {
+    echo "Middleware3-Before-";
+    $response = $next($request);
+    echo "Middleware3-After-";
+    return $response;
+};
 
-$ref = new ReflectionFunction('f1');
-foreach ($ref->getParameters() as $param) {
-//    var_dump($param->getName());
-    var_dump($param->getType()->getName());
-}
+$controller = function ($request) {
+    echo "ControllerRun-";
+    return "FinalResult";
+};
+
+$request = "RequestData"; // 模拟请求数据
+
+$result = (new Pipeline())
+    ->send($request) // 设置传递的请求数据
+    ->through([$middleware1, $middleware2, $middleware3]) // 传递中间件数组
+    ->then($controller); // 定义最终目标
+
+echo $result; // 打印最终结果
