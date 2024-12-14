@@ -36,7 +36,7 @@ set_exception_handler(function (Throwable $e) {
         'trace'     => $e->getTrace(),
     ];
 
-    \LiteView\Support\ExceptionHandler::exception_print($msg, $e);
+    \LiteView\Support\Dispatcher::exceptionPrint($msg, $e);
 });
 
 
@@ -45,7 +45,7 @@ register_shutdown_function(function () {
     $error = error_get_last();
     if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
         // 处理致命错误，可以在这里调用你的错误处理函数
-        \LiteView\Support\ExceptionHandler::exception_print($error);
+        \LiteView\Support\Dispatcher::exceptionPrint($error);
     }
 });
 
