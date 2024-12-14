@@ -27,37 +27,34 @@ class Dispatcher
     // 请求处理
     public static function work(array $target, ?array $params, Visitor $visitor)
     {
-        $params[0] = $visitor;
-        $action    = $target['action'];
+        $params[0]  = $visitor;
+        $action     = $target['action'];
+        $middleware = $target['middleware'];
 
-        if (is_callable($action) && !is_array($action)) {
-            return call_user_func_array($action, $params);
-        }
+        // 将所有中间件嵌套成闭包链
+        $pipeline = array_reduce(
+            array_reverse($middleware), // 倒序处理
+            function ($next, $middleware) {
+                return function (Visitor $visitor) use ($next, $middleware) {
+                    return call_user_func_array([new $middleware(), 'handle'], [$visitor, $next]);
+                };
+            },
+            function (Visitor $visitor) use ($action, $params) {
+                if (is_callable($action) && !is_array($action)) {
+                    return call_user_func_array($action, $params);
+                }
 
-        if (is_string($action)) {
-            list($class, $method) = explode('@', $action);
-        } else {
-            // is_callable
-            list($class, $method) = $action;
-        }
+                if (is_string($action)) {
+                    list($class, $method) = explode('@', $action);
+                } else {
+                    // is_callable
+                    list($class, $method) = $action;
+                }
+                return call_user_func_array([new $class($visitor), $method], $params);
+            }
+        );
 
-        return call_user_func_array([new $class($visitor), $method], $params);
-    }
-
-    // 前置中间件
-    public static function before($visitor, $mid)
-    {
-        if (method_exists($mid, 'handle')) {
-            return $mid->handle($visitor);
-        }
-        return null;
-    }
-
-    // 后置中间件
-    public static function after($visitor, $mid, $response)
-    {
-        if (method_exists($mid, 'after')) {
-            $mid->after($visitor, $response);
-        }
+        // 执行闭包链
+        return call_user_func_array($pipeline, $params);
     }
 }

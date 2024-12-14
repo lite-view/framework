@@ -54,9 +54,29 @@ Route::get('/a/b/c', function (LiteView\Kernel\Visitor $visitor) {
     var_dump($visitor->currentPath());
 });
 
-Route::get('/ai_img/{path}', function ($a, $b) {
-    var_dump($a, $b);
-});
+class M1
+{
+    public function handle($v, $next)
+    {
+        echo 'm1', PHP_EOL;
+        return $next($v);
+    }
+}
+
+class M2
+{
+    public function handle($v, $next)
+    {
+        $r = $next($v);
+        echo 'm2 : ' . $r, PHP_EOL;
+        return $r;
+    }
+}
+
+Route::get('/ai_img/{path}', function ($v, $b) {
+    var_dump($b);
+    return 'end';
+}, [M1::class, M2::class]);
 Route::get('/ai_img/{path}', function (LiteView\Kernel\Visitor $visitor) {
     var_dump($visitor->currentPath());
     var_dump($visitor->currentUri());
