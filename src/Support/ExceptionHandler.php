@@ -8,12 +8,7 @@ class ExceptionHandler
 {
     public function handle(array $e, \Throwable $exception = null)
     {
-        $errMsg = json_encode($e);
-        if ($errMsg) {
-            echo $errMsg;
-        } else {
-            var_dump($e);
-        }
+        require_once __DIR__ . '/../exception.php';
     }
 
     public static function exception_print(array $msg, \Throwable $exception = null)
@@ -29,7 +24,7 @@ class ExceptionHandler
             \LiteView\Utils\Log::employ('main')->error('SystemError', $msg);
             if (cfg('debug')) {
                 $classes = get_declared_classes();
-                $dealt = false;
+                $dealt   = false;
                 foreach ($classes as $class) {
                     $ref = new \ReflectionClass($class);
                     if ($ref->isSubclassOf(ExceptionHandler::class)) {
