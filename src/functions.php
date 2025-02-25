@@ -25,13 +25,6 @@ function cfg($key = null, $default = null)
 }
 
 
-function lite_view($view, $variables = [])
-{
-    $v = new LiteView\Kernel\View();
-    return $v->render($view, $variables);
-}
-
-
 function domain()
 {
     $scheme = 'http';
