@@ -5,7 +5,7 @@
 use LiteView\Kernel\Visitor;
 
 require __DIR__ . '/vendor/autoload.php';
-
+echo md5(null);
 print32(1);
 
 
