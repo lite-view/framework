@@ -12,26 +12,36 @@ use Twig\Loader\FilesystemLoader;
 
 class View
 {
-    private $path;
-    private $twig;
-    private static $instances = [];
+    private static $twigs = [];
+    private static $path = '';
+    private static $visitor;
 
-    private function __construct($path)
+    private static function getTwigEnvironment(): Environment
     {
-        $this->path = $path;
-        $this->twig = new Environment(new FilesystemLoader($this->path));
+        $path = self::getPath();
+        $key  = md5($path);
+        if (!isset(self::$twigs[$key])) {
+            self::$twigs[$key] = new Environment(new FilesystemLoader($path));
+        }
+        return self::$twigs[$key];
     }
 
-    public static function load($path = ''): View
+    public static function setPath($path)
     {
-        $key = md5($path);
-        if (!isset(self::$instances[$key])) {
-            if ('' === $path) {
-                $path = root_path(cfg('template_path', 'resources/views/'));
-            }
-            self::$instances[$key] = new self($path);
+        self::$path = $path;
+    }
+
+    public static function setVisitor(Visitor $visitor)
+    {
+        self::$visitor = $visitor;
+    }
+
+    public static function getPath(): string
+    {
+        if (self::$path) {
+            return self::$path;
         }
-        return self::$instances[$key];
+        return root_path(cfg('template_path', 'resources/views/'));
     }
 
     /**
@@ -39,23 +49,32 @@ class View
      * @throws RuntimeError
      * @throws LoaderError
      */
-    public function renderTwig(string $name, array $variables = []): string
+    public static function renderTwig(string $name, array $variables = []): string
     {
-        return $this->twig->load($name)->render($variables);
+        if (!isset($variables['visitor'])) {
+            $variables['visitor'] = self::$visitor;
+        }
+        return self::getTwigEnvironment()->load($name)->render($variables);
     }
 
-    public function renderFile(string $name, array $variables = [])
+    public static function renderFile(string $name, array $variables = [])
     {
+        if (!isset($variables['visitor'])) {
+            $variables['visitor'] = self::$visitor;
+        }
         ob_start();
         ob_implicit_flush(false);
         extract($variables);
-        require $this->path . $name;
+        require self::getPath() . $name;
         return ob_get_clean();
     }
 
-    public function render(string $name, array $variables = [])
+    public static function render(string $name, array $variables = [])
     {
+        if (!isset($variables['visitor'])) {
+            $variables['visitor'] = self::$visitor;
+        }
         extract($variables);
-        require $this->path . $name;
+        require self::getPath() . $name;
     }
 }
