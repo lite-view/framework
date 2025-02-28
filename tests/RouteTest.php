@@ -97,4 +97,11 @@ class RouteTest extends TestCase
         $this->assertEquals(['/shudan/t1', 't1'], Route::matchParamRoute('/shudan/t1', 'get')[1]);
         Route::_print();
     }
+
+    public function test05()
+    {
+        Route::get('/img/{path}', null, [], ['path' => '.+']);
+        $this->assertEquals(['/img/a/b/1.png', 'a/b/1.png'], Route::matchParamRoute('/img/a/b/1.png', 'get')[1]);
+        Route::_print();
+    }
 }

@@ -152,10 +152,12 @@ class Route
     {
         if (isset($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
+        } elseif ($_SERVER['PHP_SELF'] === $_SERVER['REQUEST_URI']) {
+            $path = $_SERVER['PHP_SELF'];
         } else {
-            $request_uri = str_replace($_SERVER['PHP_SELF'], '', $_SERVER['REQUEST_URI']);
-            $arr         = explode('?', $request_uri);
-            $path        = $arr[0] ?? '/';
+            $uri  = str_replace($_SERVER['PHP_SELF'], '', $_SERVER['REQUEST_URI']);
+            $arr  = explode('?', $uri);
+            $path = $arr[0] ?? '/';
         }
         return '/' . trim($path, '/');
     }
