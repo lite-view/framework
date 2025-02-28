@@ -150,10 +150,12 @@ class Route
 
     public static function currentPath(): string
     {
+        /* php -s 运行时
+         *      如果匹配到存在的目录 PATH_INFO 不存在
+         *      PHP_SELF 等于 REQUEST_URI 的path部份
+         * */
         if (isset($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
-        } elseif ($_SERVER['PHP_SELF'] === $_SERVER['REQUEST_URI']) {
-            $path = $_SERVER['PHP_SELF'];
         } else {
             $uri  = str_replace($_SERVER['PHP_SELF'], '', $_SERVER['REQUEST_URI']);
             $arr  = explode('?', $uri);
