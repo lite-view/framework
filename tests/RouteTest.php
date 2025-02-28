@@ -104,4 +104,36 @@ class RouteTest extends TestCase
         $this->assertEquals(['/img/a/b/1.png', 'a/b/1.png'], Route::matchParamRoute('/img/a/b/1.png', 'get')[1]);
         Route::_print();
     }
+
+    public function test06()
+    {
+        $key = 'e/p{id?}/name/{name?}';
+        $path = '/e/p2/name/';
+
+
+
+        $pattern = preg_replace_callback(
+            '#[/]*{(.+?)}#',
+            function ($arg)  {
+                var_dump($arg);
+
+                $arr = explode('?', $arg[1]);
+
+                $reg = '[0-9a-zA-Z\._-]';
+                if (count($arr) > 1) {
+                    return "[/]*($reg*)";
+                }
+                return "[/]*($reg+)";
+            },
+            $key
+        );
+
+        var_dump($pattern);
+//
+        $success = preg_match("#$pattern#", $path, $parameters);
+//        var_dump($success);
+        var_dump($parameters);
+
+        $this->assertIsArray([]);
+    }
 }

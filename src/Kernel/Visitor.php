@@ -10,19 +10,15 @@ use ArrayObject;
 class Visitor
 {
     const SESSION_USER_ID = 'session419028750685ec5af44e5bff70e8a296';
-    private $_id; //注意不能用empty函数来判断
     public $user;
     private $data = [];
 
     public function __construct()
     {
-        # SESSION 登录
         if (!isset($_SESSION)) {
             session_start();
         }
-        if (!empty($_SESSION[Visitor::SESSION_USER_ID])) {
-            $this->_id = $_SESSION[Visitor::SESSION_USER_ID];
-        }
+        $this->data['id'] = $_SESSION[Visitor::SESSION_USER_ID] ?? null;
     }
 
     public function ip($long = false)
@@ -37,7 +33,7 @@ class Visitor
     public function login($uid)
     {
         $_SESSION[Visitor::SESSION_USER_ID] = $uid;
-        $this->_id = $uid;
+        $this->data['id']                   = $uid;
     }
 
     public function logout()
@@ -47,9 +43,6 @@ class Visitor
 
     public function __get($attribute)
     {
-        if ('id' == $attribute) {
-            return (int)$this->_id;
-        }
         return $this->data[$attribute];
     }
 
@@ -60,6 +53,12 @@ class Visitor
         } else {
             $this->data[$attribute] = $value;
         }
+    }
+
+    public function __call($name, $arguments)
+    {
+        // twig 获取不存在的属性时会调用同名的方法
+        return $this->data[$name];
     }
 
     public function get($key = null, $default = null)
@@ -87,7 +86,7 @@ class Visitor
     public function input($key = null, $default = null)
     {
         $input = array_merge($_GET, $_POST, $this->data);
-        $json = json_decode(file_get_contents("php://input"), true);
+        $json  = json_decode(file_get_contents("php://input"), true);
         if (is_array($json)) {
             $input = array_merge($input, $json);
         }
@@ -102,7 +101,7 @@ class Visitor
 
     public function only(array $only = [], $null_fill = true): array
     {
-        $arr = [];
+        $arr  = [];
         $data = $this->input();
         foreach ($only as $field) {
             if (isset($data[$field])) {
@@ -118,7 +117,7 @@ class Visitor
 
     public function except(array $except = []): array
     {
-        $arr = [];
+        $arr  = [];
         $data = $this->input();
         foreach ($data as $field => $value) {
             if (!in_array($field, $except)) {
@@ -130,10 +129,10 @@ class Visitor
 
     public function currentUri($params = []): string
     {
-        $arr = parse_url($_SERVER['REQUEST_URI']);
-        $path = $arr['path'] ?? '/';
+        $arr   = parse_url($_SERVER['REQUEST_URI']);
+        $path  = $arr['path'] ?? '/';
         $query = $arr['query'] ?? '';
-        $path = '/' . trim($path, '/');
+        $path  = '/' . trim($path, '/');
         parse_str($query, $_params);
         $params = array_merge($_params, $params);
         if (empty($params)) {

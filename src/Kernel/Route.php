@@ -122,19 +122,25 @@ class Route
     public static function matchParamRoute($path, $method): array
     {
         foreach (self::$routes as $key => $target) {
+            $regular = $target['regular'];
             $pattern = preg_replace_callback(
-                '#/{(.+?)}#',
-                function ($arg) use ($target) {
-                    $arr = explode('?', $arg[1]);
-                    if (!empty($target['regular'][$arr[0]])) {
-                        $reg = $target['regular'][$arr[0]];
-                        return "/($reg)";
+                '#[/]*{(.+?)}#',
+                function ($arg) use ($regular) {
+                    list($full, $name_raw) = $arg;
+
+                    $name = trim($name_raw, '?');
+                    $reg  = $regular[$name] ?? null;
+                    if ($reg) {
+                        return "[/]*($reg)";
                     }
+
                     $reg = '[0-9a-zA-Z\._-]';
-                    if (count($arr) > 1) {
-                        return "[/]*($reg*)";
+                    if ($name_raw === $name) {
+                        // 必需参数(不带?)
+                        return "[/]*($reg+)";
                     }
-                    return "/($reg+)";
+                    // 非必需参数(带?)
+                    return "[/]*($reg*)";
                 },
                 $key
             );
@@ -145,14 +151,17 @@ class Route
             }
         }
         // trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
+
         return [null, null];
     }
 
     public static function currentPath(): string
     {
-        /* php -s 运行时
+        /* php -s index.php # 指定路由文件，无论如何都会进入index.php
          *      如果匹配到存在的目录 PATH_INFO 不存在
          *      PHP_SELF 等于 REQUEST_URI 的path部份
+         * php -s # 不指定路由文件，默认用index.php
+         *      遇到带后缀的地址不会进入index.php
          * */
         if (isset($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
