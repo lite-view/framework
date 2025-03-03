@@ -157,12 +157,6 @@ class Route
 
     public static function currentPath(): string
     {
-        /* php -s index.php # 指定路由文件，无论如何都会进入index.php
-         *      如果匹配到存在的目录 PATH_INFO 不存在
-         *      PHP_SELF 等于 REQUEST_URI 的path部份
-         * php -s # 不指定路由文件，默认用index.php
-         *      遇到带后缀的地址不会进入index.php
-         * */
         if (isset($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
         } else {
