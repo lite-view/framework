@@ -9,6 +9,8 @@ use LiteView\Kernel\Visitor;
 
 class Dispatcher
 {
+    public static $exceptionManager;
+
     // 根据环境加载配置
     public static function checkEnv()
     {
@@ -70,22 +72,24 @@ class Dispatcher
 
         try {
             \LiteView\Utils\Log::employ('main')->error('SystemError', $msg);
-            if (cfg('debug')) {
-                $classes = get_declared_classes();
-                $dealt   = false;
-                foreach ($classes as $class) {
-                    $ref = new \ReflectionClass($class);
-                    if ($ref->isSubclassOf(ExceptionHandler::class)) {
-                        (new $class())->handle($msg, $exception); //使用自定义异常打印
-                        $dealt = true;
-                    }
-                }
-                if (!$dealt) {
-                    // 如果没有自定义异常打印，那么就用默认的异常打印
-                    (new ExceptionHandler())->handle($msg, $exception);
+            if (self::$exceptionManager && self::$exceptionManager->use) {
+                self::$exceptionManager->handle($msg, $exception);
+                return;
+            }
+
+            if (!cfg('debug')) {
+                echo '系统繁忙';
+                return;
+            }
+
+            if ($exception instanceof \Throwable) {
+                if ('cli' === php_sapi_name() && 'cli' === PHP_SAPI) {
+                    dump($msg);
+                } else {
+                    require_once __DIR__ . '/../exception.php';
                 }
             } else {
-                echo '系统繁忙';
+                dump($msg);
             }
         } catch (\Exception $e) {
             echo 'Dispatcher@exceptionPrint: ' . $e->getMessage();
