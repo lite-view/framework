@@ -59,22 +59,30 @@ class View
 
     public static function renderFile(string $name, array $variables = [])
     {
-        if (!isset($variables['visitor'])) {
-            $variables['visitor'] = self::$visitor;
+        if (substr_compare($name, '.php', -4) === 0) {
+            if (!isset($variables['visitor'])) {
+                $variables['visitor'] = self::$visitor;
+            }
+            ob_start();
+            ob_implicit_flush(false);
+            extract($variables);
+            require self::getPath() . $name;
+            return ob_get_clean();
+        } else {
+            return file_get_contents(self::getPath() . $name);
         }
-        ob_start();
-        ob_implicit_flush(false);
-        extract($variables);
-        require self::getPath() . $name;
-        return ob_get_clean();
     }
 
     public static function render(string $name, array $variables = [])
     {
-        if (!isset($variables['visitor'])) {
-            $variables['visitor'] = self::$visitor;
+        if (substr_compare($name, '.php', -4) === 0) {
+            if (!isset($variables['visitor'])) {
+                $variables['visitor'] = self::$visitor;
+            }
+            extract($variables);
+            require self::getPath() . $name;
+        } else {
+            echo file_get_contents(self::getPath() . $name);
         }
-        extract($variables);
-        require self::getPath() . $name;
     }
 }
