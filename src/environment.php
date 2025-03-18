@@ -6,8 +6,9 @@ require_once __DIR__ . '/functions.php';
 
 //ob_start 是 PHP 中的一个输出缓冲函数。它开启了一个输出缓冲区，用于存储由 PHP 脚本产生的输出内容(echo、print、var_dump...)，而不是直接将这些内容发送到浏览器或者其他输出设备。
 //ob_get_clean 函数获取并清空缓冲区
-ob_start();
-error_reporting(-1);
+//开启 ob_start ，cli模式中也会一次性输出
+//ob_start();
+error_reporting(-1); //启用所有错误
 
 
 set_error_handler(function ($level, $message, $file = '', $line = 0, $context = []) {
