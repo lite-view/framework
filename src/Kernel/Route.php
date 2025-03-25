@@ -157,12 +157,11 @@ class Route
 
     public static function currentPath(): string
     {
-        if (isset($_SERVER['PATH_INFO'])) {
+        if (!empty($_SERVER['PATH_INFO'])) {
             $path = $_SERVER['PATH_INFO'];
         } else {
             $uri  = str_replace($_SERVER['PHP_SELF'], '', $_SERVER['REQUEST_URI']);
-            $arr  = explode('?', $uri);
-            $path = $arr[0] ?? '/';
+            $path = explode('?', $uri)[0];
         }
         return '/' . trim($path, '/');
     }
