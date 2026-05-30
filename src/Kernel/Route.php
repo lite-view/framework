@@ -194,4 +194,11 @@ class Route
             echo '    ┕ ', json_encode($v), PHP_EOL;
         }
     }
+
+    public static function reset(): void
+    {
+        self::$routes = [];
+        self::$prefix = [];
+        self::$middleware = [];
+    }
 }

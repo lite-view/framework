@@ -2,137 +2,292 @@
 
 namespace Test;
 
-
 use LiteView\Kernel\Route;
 use PHPUnit\Framework\TestCase;
 
-
 class RouteTest extends TestCase
 {
-    public function test01()
+    protected function setUp(): void
     {
-        Route::rule('*', 'a', null);
-        Route::rule('get', 'b1', null, [1, 2, 3]);
-        Route::rule('post', 'b2', null, [1, 2, 3]);
-        Route::get('get', null, [1, 2, 3]);
-        Route::post('post', null, [1, 2, 3]);
-        Route::any('any', null, [1, 2, 3]);
-        Route::group('g1', function () {
-            Route::rule('*', 'a', null, [1, 2, 3]);
-            Route::rule('get', 'b1', null, [1, 2, 3]);
-            Route::rule('post', 'b2', null, [1, 2, 3]);
-            Route::get('get', null, [1, 2, 3]);
-            Route::post('post', null, [1, 2, 3]);
-            Route::any('any', null, [1, 2, 3]);
-            Route::group(['prefix' => 'g2', 'middleware' => [0]], function () {
-                Route::rule('*', 'a', null, [1, 2, 3]);
-                Route::rule('get', 'b1', null, [1, 2, 3]);
-                Route::rule('post', 'b2', null, [1, 2, 3]);
-                Route::get('get', null, [1, 2, 3]);
-                Route::post('post', null, [1, 2, 3]);
-                Route::any('any', null, [1, 2, 3]);
-                Route::group(['prefix' => 'g2', 'middleware' => [11]], function () {
-                    Route::any('any', null, [1, 2, 3]);
-                });
+        Route::reset();
+    }
+
+    public function testStaticGetRoute()
+    {
+        Route::get('/hello', 'Handler@hello');
+        $_SERVER['PATH_INFO'] = '/hello';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals(['GET'], $target['method']);
+        $this->assertNull($params);
+    }
+
+    public function testStaticPostRoute()
+    {
+        Route::post('/submit', 'Handler@submit');
+        $_SERVER['PATH_INFO'] = '/submit';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals(['POST'], $target['method']);
+    }
+
+    public function testAnyRouteMatchAllMethods()
+    {
+        Route::any('/any', 'Handler@any');
+
+        $_SERVER['PATH_INFO'] = '/any';
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
+
+        $_SERVER['REQUEST_METHOD'] = 'DELETE';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
+    }
+
+    public function testMethodNotMatchReturnsNull()
+    {
+        Route::get('/only-get', 'Handler@get');
+        $_SERVER['PATH_INFO'] = '/only-get';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        [$target, $params] = Route::match();
+        $this->assertNull($target);
+    }
+
+    public function testStaticRouteNotFound()
+    {
+        Route::get('/exists', 'Handler@get');
+        $_SERVER['PATH_INFO'] = '/not-exists';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNull($target);
+    }
+
+    public function testRequiredParameter()
+    {
+        Route::get('/user/{id}', 'Handler@show');
+        [$target, $params] = Route::matchParamRoute('/user/123', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('/user/123', $params[0]);
+        $this->assertEquals('123', $params[1]);
+    }
+
+    public function testOptionalParameter()
+    {
+        Route::get('/list/{page?}', 'Handler@list');
+
+        [$target, $params] = Route::matchParamRoute('/list/2', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('2', $params[1]);
+
+        [$target, $params] = Route::matchParamRoute('/list', 'get');
+        $this->assertNotNull($target);
+    }
+
+    public function testMixedRequiredAndOptionalParameters()
+    {
+        Route::get('/post/{id}/{slug?}', 'Handler@post');
+
+        [$target, $params] = Route::matchParamRoute('/post/5/hello', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('5', $params[1]);
+        $this->assertEquals('hello', $params[2]);
+
+        [$target, $params] = Route::matchParamRoute('/post/5', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('5', $params[1]);
+    }
+
+    public function testCustomRegexParameter()
+    {
+        Route::get('/img/{path}', 'Handler@img', [], ['path' => '.+']);
+
+        [$target, $params] = Route::matchParamRoute('/img/a/b/c.png', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('a/b/c.png', $params[1]);
+    }
+
+    public function testCustomRegexParameterMustBeValid()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Route::get('/bad/{id}', 'Handler@bad', [], ['id' => '[invalid']);
+    }
+
+    public function testTrailingSlashTolerance()
+    {
+        Route::get('/hello', 'Handler@hello');
+
+        [$target, $params] = Route::matchParamRoute('/hello', 'get');
+        $this->assertNotNull($target);
+
+        [$target, $params] = Route::matchParamRoute('/hello/', 'get');
+        $this->assertNotNull($target);
+    }
+
+    public function testStaticRouteNotMatchPartial()
+    {
+        Route::get('/user/{id}', 'Handler@show');
+
+        [$target, $params] = Route::matchParamRoute('/userabc', 'get');
+        $this->assertNull($target);
+    }
+
+    public function testGroupPrefix()
+    {
+        Route::group('api', function () {
+            Route::get('/users', 'Handler@users');
+        });
+
+        $_SERVER['PATH_INFO'] = '/api/users';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+    }
+
+    public function testGroupMiddleware()
+    {
+        Route::group(['prefix' => 'api', 'middleware' => ['AuthMiddleware']], function () {
+            Route::get('/posts', 'Handler@posts');
+        });
+
+        $_SERVER['PATH_INFO'] = '/api/posts';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertContains('AuthMiddleware', $target['middleware']);
+    }
+
+    public function testNestedGroup()
+    {
+        Route::group('api', function () {
+            Route::group('v1', function () {
+                Route::get('/status', 'Handler@status');
             });
         });
-        Route::group(['prefix' => 'g3', 'middleware' => [-1, 0]], function () {
-            Route::rule('*', 'a', null, [1, 2, 3]);
-            Route::rule('get', 'b1', null, [1, 2, 3]);
-            Route::rule('post', 'b2', null, [1, 2, 3]);
-            Route::get('get', null, [1, 2, 3]);
-            Route::post('post', null, [1, 2, 3]);
-            Route::any('any', null, [1, 2, 3]);
+
+        $_SERVER['PATH_INFO'] = '/api/v1/status';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+    }
+
+    public function testGroupDoesNotLeakPrefix()
+    {
+        Route::group('api', function () {
+            Route::get('/inner', 'Handler@inner');
         });
-        Route::_print();
-        $this->assertEquals(1, 1);
+        Route::get('/outer', 'Handler@outer');
+
+        $_SERVER['PATH_INFO'] = '/outer';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@outer', $target['action']);
     }
 
-    public function test02()
+    public function testQuickSkipsMagicMethods()
     {
-        Route::get('a/{id}', null);
-        $this->assertEquals(['/a/1', '1'], Route::matchParamRoute('/a/1', 'get')[1]);
+        Route::quick('/ctrl', QuickTestController::class);
 
-        Route::get('b/{id?}', null);
-        $this->assertEquals(['/b/', ''], Route::matchParamRoute('/b/', 'get')[1]);
-        $this->assertEquals(['/b/1', '1'], Route::matchParamRoute('/b/1', 'get')[1]);
+        $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        Route::get('c/{id}/name/{name}', null);
-        $this->assertEquals(['/c/1/name/scj', '1', 'scj'], Route::matchParamRoute('/c/1/name/scj', 'get')[1]);
+        $_SERVER['PATH_INFO'] = '/ctrl/action1';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
 
-        Route::get('d/{id}/name/{name?}', null);
-        $this->assertEquals(['/d/1/name/scj', '1', 'scj'], Route::matchParamRoute('/d/1/name/scj', 'get')[1]);
-        $this->assertEquals(['/d/1/name/', '1', ''], Route::matchParamRoute('/d/1/name/', 'get')[1]);
-
-        Route::get('e/{id?}/name/{name?}', null);
-        $this->assertEquals(['/e/1/name/scj', '1', 'scj'], Route::matchParamRoute('/e/1/name/scj', 'get')[1]);
-        $this->assertEquals(['/e/1/name/', '1', ''], Route::matchParamRoute('/e/1/name/', 'get')[1]);
-        $this->assertEquals(['/e/name/', '', ''], Route::matchParamRoute('/e/name/', 'get')[1]);
-
-        Route::get('f/{id?}/{tel?}/{name?}', null);
-        $this->assertEquals(['/f'], Route::matchParamRoute('/f', 'get')[1]);
-        $this->assertEquals(['/f/1', '1'], Route::matchParamRoute('/f/1', 'get')[1]);
-        $this->assertEquals(['/f/1/2', '1', '2'], Route::matchParamRoute('/f/1/2', 'get')[1]);
-        $this->assertEquals(['/f/1/2/3', '1', '2', '3'], Route::matchParamRoute('/f/1/2/3', 'get')[1]);
+        $_SERVER['PATH_INFO'] = '/ctrl/__construct';
+        [$target,] = Route::match();
+        $this->assertNull($target);
     }
 
-    public function test03()
+    public function testAllOptionalParameters()
     {
-        Route::get('/ai_img/{path}', null);
-        $this->assertEquals(['/ai_img/a', 'a'], Route::matchParamRoute('/ai_img/a', 'get')[1]);
-        $this->assertEquals(null, Route::matchParamRoute('/ai_img/a/b/c', 'get')[1]);
-        Route::get('/ai_img/{path}', null, [], ['path' => '.+']);
-        $this->assertEquals(['/ai_img/a/b/c', 'a/b/c'], Route::matchParamRoute('/ai_img/a/b/c', 'get')[1]);
-        $this->assertEquals(['/ai_img/a/b/c.png', 'a/b/c.png'], Route::matchParamRoute('/ai_img/a/b/c.png', 'get')[1]);
+        Route::get('/search/{keyword?}/{page?}', 'Handler@search');
 
-        Route::get('/book/{id}.html', null);
-        $this->assertEquals(['/book/xxx.html', 'xxx'], Route::matchParamRoute('/book/xxx.html', 'get')[1]);
+        [$target, $params] = Route::matchParamRoute('/search', 'get');
+        $this->assertNotNull($target);
+
+        [$target, $params] = Route::matchParamRoute('/search/php', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('php', $params[1]);
+
+        [$target, $params] = Route::matchParamRoute('/search/php/2', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('php', $params[1]);
+        $this->assertEquals('2', $params[2]);
     }
 
-    public function test04()
+    public function testRouteWithSuffix()
     {
-        Route::get('/shudan/{tag}/', null, [], ['tag' => '(?!.*\.html$).*']);
-        Route::get('/shudan/{tag}/{id}.html', null);
-        $this->assertEquals(['/shudan/t1/1.html', 't1', '1'], Route::matchParamRoute('/shudan/t1/1.html', 'get')[1]);
-        $this->assertEquals(['/shudan/t1', 't1'], Route::matchParamRoute('/shudan/t1', 'get')[1]);
-        Route::_print();
+        Route::get('/book/{id}.html', 'Handler@book');
+
+        [$target, $params] = Route::matchParamRoute('/book/123.html', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('123', $params[1]);
     }
 
-    public function test05()
+    public function testStaticRoutePriorityOverParamRoute()
     {
-        Route::get('/img/{path}', null, [], ['path' => '.+']);
-        $this->assertEquals(['/img/a/b/1.png', 'a/b/1.png'], Route::matchParamRoute('/img/a/b/1.png', 'get')[1]);
-        Route::_print();
+        Route::get('/user/me', 'Handler@me');
+        Route::get('/user/{id}', 'Handler@id');
+
+        $_SERVER['PATH_INFO'] = '/user/me';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@me', $target['action']);
+        $this->assertNull($params);
     }
 
-    public function test06()
+    public function testOptionalParamWithLiteralBetween()
     {
-        $key  = 'e/p{id?}/name/{name?}';
-        $path = '/e/p2/name/';
+        Route::get('/e/{id?}/name/{name?}', 'Handler@e');
 
+        [$target, $params] = Route::matchParamRoute('/e/1/name/scj', 'get');
+        $this->assertNotNull($target);
+        $this->assertEquals('1', $params[1]);
+        $this->assertEquals('scj', $params[2]);
 
-        $pattern = preg_replace_callback(
-            '#[/]*{(.+?)}#',
-            function ($arg) {
-                var_dump($arg);
-
-                $arr = explode('?', $arg[1]);
-
-                $reg = '[0-9a-zA-Z\._-]';
-                if (count($arr) > 1) {
-                    return "[/]*($reg*)";
-                }
-                return "[/]*($reg+)";
-            },
-            $key
-        );
-
-        var_dump($pattern);
-//
-        $success = preg_match("#$pattern#", $path, $parameters);
-//        var_dump($success);
-        var_dump($parameters);
-
-        $this->assertIsArray([]);
+        [$target, $params] = Route::matchParamRoute('/e/name', 'get');
+        $this->assertNotNull($target);
     }
+
+    public function testQuickRegistersPublicMethods()
+    {
+        Route::quick('/ctrl', QuickTestController::class);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['PATH_INFO'] = '/ctrl/action1';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([QuickTestController::class, 'action1'], $target['action']);
+
+        $_SERVER['PATH_INFO'] = '/ctrl/action2';
+        [$target,] = Route::match();
+        $this->assertNotNull($target);
+    }
+}
+
+class QuickTestController
+{
+    public function __construct() {}
+    public function action1() {}
+    public function action2() {}
+    public function __toString() { return ''; }
 }

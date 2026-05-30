@@ -35,6 +35,9 @@ class ApiToken
             return 1;
         }
         $info = json_decode(base64_decode($token), true);
+        if (!is_array($info)) {
+            return 2;
+        }
         $sign = $info['sign'] ?? '';
         unset($info['sign']);
 
