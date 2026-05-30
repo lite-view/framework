@@ -28,10 +28,24 @@ class Route
             $path = "$path>>>" . json_encode($target['regular']);
         }
         if (isset(self::$routes[$path])) {
-            trigger_error("Route already exists: $path", E_USER_ERROR);
+            foreach (self::$routes[$path] as $existing) {
+                if (self::methodsOverlap($target['method'], $existing['method'])) {
+                    trigger_error("Route already exists: $path", E_USER_ERROR);
+                }
+            }
         }
         $target['middleware'] = self::mergeMiddleware($target['middleware']);
-        self::$routes[$path]  = $target;
+        self::$routes[$path][] = $target;
+    }
+
+    private static function methodsOverlap($a, $b): bool
+    {
+        if ($a === '*' || $b === '*') {
+            return true;
+        }
+        $a = array_map('strtolower', (array)$a);
+        $b = array_map('strtolower', (array)$b);
+        return (bool)array_intersect($a, $b);
     }
 
     private static function mergeMiddleware($middleware): array
@@ -129,18 +143,23 @@ class Route
     {
         $path   = self::currentPath();
         $method = strtolower($_SERVER['REQUEST_METHOD']);
-        $target = self::$routes[$path] ?? null;
-        if ($target) {
-            return [self::filterMethod($target, $method), null];
+        $targets = self::$routes[$path] ?? null;
+        if ($targets) {
+            foreach ($targets as $target) {
+                $filtered = self::filterMethod($target, $method);
+                if ($filtered) {
+                    return [$filtered, null];
+                }
+            }
+            return [null, null];
         }
         return self::matchParamRoute($path, $method);
     }
 
     public static function matchParamRoute($path, $method): array
     {
-        // 提取并组装路由规则
-        foreach (self::$routes as $key => $target) {
-            $regular  = $target['regular'];
+        foreach (self::$routes as $key => $targets) {
+            $regular  = $targets[0]['regular'];
             $path_exp = explode('>>>', $key)[0];
             $pattern  = preg_replace_callback(
                 '#(/?){(.+?)}#',
@@ -165,13 +184,16 @@ class Route
                 $path_exp
             );
 
-            // 用提取出的规则（$pattern）匹配真实的地址
             $success = preg_match("#^$pattern/?$#", $path, $parameters);
             if ($success && $path === $parameters[0]) {
-                return [self::filterMethod($target, $method), $parameters];
+                foreach ($targets as $target) {
+                    $filtered = self::filterMethod($target, $method);
+                    if ($filtered) {
+                        return [$filtered, $parameters];
+                    }
+                }
             }
         }
-        // trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
 
         return [null, null];
     }
@@ -189,9 +211,11 @@ class Route
 
     public static function _print()
     {
-        foreach (self::$routes as $k => $v) {
-            echo $k, PHP_EOL;
-            echo '    ┕ ', json_encode($v), PHP_EOL;
+        foreach (self::$routes as $k => $targets) {
+            foreach ($targets as $v) {
+                echo $k, PHP_EOL;
+                echo '    ┕ ', json_encode($v), PHP_EOL;
+            }
         }
     }
 

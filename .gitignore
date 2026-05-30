@@ -6,3 +6,4 @@ storage
 vendor
 composer.lock
 config.json
+.phpunit.result.cache

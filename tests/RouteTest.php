@@ -282,6 +282,126 @@ class RouteTest extends TestCase
         [$target,] = Route::match();
         $this->assertNotNull($target);
     }
+
+    public function testSamePathDifferentMethods()
+    {
+        Route::get('/users', 'Handler@index');
+        Route::post('/users', 'Handler@store');
+
+        $_SERVER['PATH_INFO'] = '/users';
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@index', $target['action']);
+        $this->assertNull($params);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@store', $target['action']);
+        $this->assertNull($params);
+    }
+
+    public function testSamePathSameMethodTriggersError()
+    {
+        $this->expectException(\ErrorException::class);
+        Route::get('/dup', 'Handler@first');
+        Route::get('/dup', 'Handler@second');
+    }
+
+    public function testMethodNotAllowedOnSamePath()
+    {
+        Route::get('/users', 'Handler@index');
+        Route::post('/users', 'Handler@store');
+
+        $_SERVER['PATH_INFO'] = '/users';
+        $_SERVER['REQUEST_METHOD'] = 'DELETE';
+
+        [$target, $params] = Route::match();
+        $this->assertNull($target);
+    }
+
+    public function testSamePathParamRouteDifferentMethods()
+    {
+        Route::get('/items/{id}', 'Handler@show');
+        Route::rule(['PUT', 'PATCH'], '/items/{id}', 'Handler@update');
+
+        $_SERVER['PATH_INFO'] = '/items/42';
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@show', $target['action']);
+        $this->assertEquals('42', $params[1]);
+
+        $_SERVER['REQUEST_METHOD'] = 'PUT';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@update', $target['action']);
+
+        $_SERVER['REQUEST_METHOD'] = 'PATCH';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals('Handler@update', $target['action']);
+    }
+
+    public function testApiResource()
+    {
+        Route::apiResource('/users', ApiResourceTestController::class);
+
+        $_SERVER['PATH_INFO'] = '/users';
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'index'], $target['action']);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'store'], $target['action']);
+
+        $_SERVER['PATH_INFO'] = '/users/5';
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'show'], $target['action']);
+
+        $_SERVER['REQUEST_METHOD'] = 'PUT';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'update'], $target['action']);
+
+        $_SERVER['REQUEST_METHOD'] = 'PATCH';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'update'], $target['action']);
+
+        $_SERVER['REQUEST_METHOD'] = 'DELETE';
+        [$target, $params] = Route::match();
+        $this->assertNotNull($target);
+        $this->assertEquals([ApiResourceTestController::class, 'destroy'], $target['action']);
+    }
+
+    public function testApiResourceDeleteNotMatchGet()
+    {
+        Route::apiResource('/posts', ApiResourceTestController::class);
+
+        $_SERVER['PATH_INFO'] = '/posts';
+        $_SERVER['REQUEST_METHOD'] = 'DELETE';
+
+        [$target, $params] = Route::match();
+        $this->assertNull($target);
+    }
+
+    public function testAnyWithSamePathOverlap()
+    {
+        $this->expectException(\ErrorException::class);
+        Route::any('/overlap', 'Handler@any');
+        Route::get('/overlap', 'Handler@get');
+    }
 }
 
 class QuickTestController
@@ -290,4 +410,13 @@ class QuickTestController
     public function action1() {}
     public function action2() {}
     public function __toString() { return ''; }
+}
+
+class ApiResourceTestController
+{
+    public function index() {}
+    public function store() {}
+    public function show($id) {}
+    public function update($id) {}
+    public function destroy($id) {}
 }
