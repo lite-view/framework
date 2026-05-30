@@ -61,16 +61,9 @@ class Route
     private static function filterMethod(array $target, string $method): ?array
     {
         $pass = $target['method'];
-        if (is_string($pass)) {
-            $pass = [$pass];
-        }
-        foreach ($pass as $key) {
-            $pass[strtolower($key)] = 1;
-        }
-        if (isset($pass[$method]) || isset($pass['*'])) {
+        if ($pass === '*' || in_array($method, array_map('strtolower', (array)$pass))) {
             return $target;
         }
-        //trigger_error('route not found: ' . $method . '@' . $path, E_USER_ERROR);
         return null;
     }
 
