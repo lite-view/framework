@@ -161,7 +161,7 @@ class Route
             );
 
             // 用提取出的规则（$pattern）匹配真实的地址
-            $success = preg_match("#$pattern#", $path, $parameters);
+            $success = preg_match("#^$pattern/?$#", $path, $parameters);
             if ($success && $path === $parameters[0]) {
                 return [self::filterMethod($target, $method), $parameters];
             }
