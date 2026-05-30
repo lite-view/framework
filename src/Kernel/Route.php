@@ -9,8 +9,20 @@ class Route
     private static $prefix = [];
     private static $middleware = [];
 
+    private static function validateRegular(array $regular): void
+    {
+        foreach ($regular as $name => $pattern) {
+            if (@preg_match("/$pattern/", '') === false) {
+                throw new \InvalidArgumentException("Invalid regex for {$name}: {$pattern}");
+            }
+        }
+    }
+
     private static function add($path, $target)
     {
+        if (!empty($target['regular'])) {
+            self::validateRegular($target['regular']);
+        }
         $path = self::fixPath($path);
         if (!empty($target['regular'])) {
             $path = "$path>>>" . json_encode($target['regular']);
