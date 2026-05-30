@@ -54,7 +54,7 @@ class View
         if (!isset($variables['visitor'])) {
             $variables['visitor'] = self::$visitor;
         }
-        return self::getTwigEnvironment()->load($name)->render($variables);
+        return self::getTwigEnvironment()->render($name, $variables);
     }
 
     public static function renderFile(string $name, array $variables = [])
