@@ -71,16 +71,24 @@ function cors($path)
     if (empty($cors)) {
         return;
     }
-    if ('*' === $cors['paths'][0]) {
-        header('Access-Control-Allow-Origin: *');
-        header("Access-Control-Allow-Headers: *");
+    $origin = $cors['allow_origins'] ?? '*';
+    $methods = $cors['allow_methods'] ?? 'POST, GET, OPTIONS';
+    $headers = $cors['allow_headers'] ?? '*';
+
+    if ('*' === ($cors['paths'][0] ?? '')) {
+        header("Access-Control-Allow-Origin: $origin");
+        header("Access-Control-Allow-Headers: $headers");
         header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+        header("Access-Control-Allow-Methods: $methods");
         header("Access-Control-Expose-Headers: *");
         return;
     }
     if (in_array($path, $cors['paths'])) {
-        //
+        header("Access-Control-Allow-Origin: $origin");
+        header("Access-Control-Allow-Headers: $headers");
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Methods: $methods");
+        header("Access-Control-Expose-Headers: *");
     }
 }
 

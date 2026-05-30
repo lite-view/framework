@@ -4,22 +4,22 @@
 namespace LiteView\Utils;
 
 
-class JWT
+class ApiToken
 {
     private static function sign($data): string
     {
         ksort($data);
-        $string1 = http_build_query($data) . cfg('jwt_secret');
+        $string1 = http_build_query($data) . cfg('api_token_secret');
         return md5($string1);
     }
 
     /**
      * @param array $data
-     * @param int $ttl token有效期，单位分钟
+     * @param int $ttl token有效期，单位秒，默认1小时
      * @param string $guard
      * @return string
      */
-    public static function create(array $data, int $ttl = 1, string $guard = 'api'): string
+    public static function create(array $data, int $ttl = 3600, string $guard = 'api'): string
     {
         $data['ttl']       = $ttl;
         $data['guard']     = $guard;
@@ -42,7 +42,7 @@ class JWT
         if ($sign !== self::sign($info)) {
             return 2;//签名错误
         }
-        if (time() > $info['ttl'] * 60 + $info['timestamp']) {
+        if (time() > $info['ttl'] + $info['timestamp']) {
             return 3;//过期
         }
         if ($info['guard'] != $guard) {
