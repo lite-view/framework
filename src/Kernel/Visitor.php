@@ -25,7 +25,7 @@ class Visitor
     public function ip($long = false)
     {
         if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]) && cfg('trust_proxy')) {
-            $ip = trim(current(explode(',', $_SERVER["HTTP_X_FORWARDED_FOR"])));
+            $ip = trim(explode(',', $_SERVER["HTTP_X_FORWARDED_FOR"])[0]);
         } else {
             $ip = $_SERVER["REMOTE_ADDR"];
         }

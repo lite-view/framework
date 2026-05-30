@@ -29,6 +29,7 @@ class Dispatcher
     // 请求处理
     public static function work(array $target, ?array $params, Visitor $visitor)
     {
+        $params     = $params ?? [];
         $params[0]  = $visitor;
         $action     = $target['action'];
         $middleware = $target['middleware'];

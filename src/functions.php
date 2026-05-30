@@ -19,7 +19,10 @@ function cfg($key = null, $default = null)
     }
     $need = explode('.', $key);
     foreach ($need as $field) {
-        $data = $data[$field] ?? null;
+        if (!is_array($data) || !array_key_exists($field, $data)) {
+            return $default;
+        }
+        $data = $data[$field];
     }
     return $data ?? $default;
 }
@@ -71,24 +74,29 @@ function cors($path)
     if (empty($cors)) {
         return;
     }
-    $origin = $cors['allow_origins'] ?? '*';
+    $origin  = $cors['allow_origins'] ?? '*';
     $methods = $cors['allow_methods'] ?? 'POST, GET, OPTIONS';
     $headers = $cors['allow_headers'] ?? '*';
 
     if ('*' === ($cors['paths'][0] ?? '')) {
-        header("Access-Control-Allow-Origin: $origin");
-        header("Access-Control-Allow-Headers: $headers");
-        header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Methods: $methods");
-        header("Access-Control-Expose-Headers: *");
-        return;
+        $applies = true;
+    } else {
+        $applies = in_array($path, $cors['paths']);
     }
-    if (in_array($path, $cors['paths'])) {
-        header("Access-Control-Allow-Origin: $origin");
-        header("Access-Control-Allow-Headers: $headers");
-        header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Methods: $methods");
-        header("Access-Control-Expose-Headers: *");
+
+    if ($applies) {
+        if ($origin === '*') {
+            header("Access-Control-Allow-Origin: *");
+            header("Access-Control-Allow-Methods: $methods");
+            header("Access-Control-Allow-Headers: $headers");
+            header("Access-Control-Expose-Headers: *");
+        } else {
+            header("Access-Control-Allow-Origin: $origin");
+            header("Access-Control-Allow-Credentials: true");
+            header("Access-Control-Allow-Methods: $methods");
+            header("Access-Control-Allow-Headers: $headers");
+            header("Access-Control-Expose-Headers: *");
+        }
     }
 }
 
