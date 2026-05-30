@@ -34,7 +34,7 @@ class Route
                 }
             }
         }
-        $target['middleware'] = self::mergeMiddleware($target['middleware']);
+        $target['middleware']  = self::mergeMiddleware($target['middleware']);
         self::$routes[$path][] = $target;
     }
 
@@ -139,10 +139,13 @@ class Route
         }
     }
 
+    /**
+     * @return array $target, $params
+     */
     public static function match(): array
     {
-        $path   = self::currentPath();
-        $method = strtolower($_SERVER['REQUEST_METHOD']);
+        $path    = self::currentPath();
+        $method  = strtolower($_SERVER['REQUEST_METHOD']);
         $targets = self::$routes[$path] ?? null;
         if ($targets) {
             foreach ($targets as $target) {
@@ -221,8 +224,8 @@ class Route
 
     public static function reset(): void
     {
-        self::$routes = [];
-        self::$prefix = [];
+        self::$routes     = [];
+        self::$prefix     = [];
         self::$middleware = [];
     }
 }
