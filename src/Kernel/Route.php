@@ -121,8 +121,10 @@ class Route
 
     public static function matchParamRoute($path, $method): array
     {
+        // 提取并组装路由规则
         foreach (self::$routes as $key => $target) {
             $regular = $target['regular'];
+            $uri     = explode('>>>', $key)[0];
             $pattern = preg_replace_callback(
                 '#[/]*{(.+?)}#',
                 function ($arg) use ($regular) {
@@ -139,12 +141,13 @@ class Route
                         // 必需参数(不带?)
                         return "[/]*($reg+)";
                     }
-                    // 非必需参数(带?)
+                    // 可选参数(带?)
                     return "[/]*($reg*)";
                 },
-                $key
+                $uri
             );
-            $pattern = explode('>>>', $pattern)[0];
+
+            // 用提取出的规则（$pattern）匹配真实的地址
             $success = preg_match("#$pattern#", $path, $parameters);
             if ($success && $path === $parameters[0]) {
                 return [self::filterMethod($target, $method), $parameters];

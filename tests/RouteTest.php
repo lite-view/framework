@@ -107,14 +107,13 @@ class RouteTest extends TestCase
 
     public function test06()
     {
-        $key = 'e/p{id?}/name/{name?}';
+        $key  = 'e/p{id?}/name/{name?}';
         $path = '/e/p2/name/';
-
 
 
         $pattern = preg_replace_callback(
             '#[/]*{(.+?)}#',
-            function ($arg)  {
+            function ($arg) {
                 var_dump($arg);
 
                 $arr = explode('?', $arg[1]);
@@ -135,5 +134,12 @@ class RouteTest extends TestCase
         var_dump($parameters);
 
         $this->assertIsArray([]);
+    }
+
+    public function test07()
+    {
+        Route::get('/img/{path}', null, [], ['path' => '.+']);
+        $this->assertEquals(['/img/a/b/1.png', 'a/b/1.png'], Route::matchParamRoute('/img/a/b/1.png', 'get')[1]);
+//        Route::_print();
     }
 }
