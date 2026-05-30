@@ -135,28 +135,29 @@ class Route
     {
         // 提取并组装路由规则
         foreach (self::$routes as $key => $target) {
-            $regular = $target['regular'];
-            $uri     = explode('>>>', $key)[0];
-            $pattern = preg_replace_callback(
-                '#[/]*{(.+?)}#',
+            $regular  = $target['regular'];
+            $path_exp = explode('>>>', $key)[0];
+            $pattern  = preg_replace_callback(
+                '#(/?){(.+?)}#',
                 function ($arg) use ($regular) {
-                    list($full, $name_raw) = $arg;
-
-                    $name = trim($name_raw, '?');
-                    $reg  = $regular[$name] ?? null;
+                    $slash    = $arg[1];
+                    $name_raw = $arg[2];
+                    $name     = trim($name_raw, '?');
+                    $reg      = $regular[$name] ?? null;
                     if ($reg) {
-                        return "[/]*($reg)";
+                        if ($name_raw !== $name) {
+                            return $slash ? "(?:/($reg))?" : "($reg)?";
+                        }
+                        return $slash . "($reg)";
                     }
 
                     $reg = '[0-9a-zA-Z\._-]';
                     if ($name_raw === $name) {
-                        // 必需参数(不带?)
-                        return "[/]*($reg+)";
+                        return $slash . "($reg+)";
                     }
-                    // 可选参数(带?)
-                    return "[/]*($reg*)";
+                    return $slash ? "(?:/($reg*))?" : "($reg*)?";
                 },
-                $uri
+                $path_exp
             );
 
             // 用提取出的规则（$pattern）匹配真实的地址

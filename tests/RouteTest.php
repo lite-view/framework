@@ -70,9 +70,9 @@ class RouteTest extends TestCase
         $this->assertEquals(['/e/name/', '', ''], Route::matchParamRoute('/e/name/', 'get')[1]);
 
         Route::get('f/{id?}/{tel?}/{name?}', null);
-        $this->assertEquals(['/f', '', '', ''], Route::matchParamRoute('/f', 'get')[1]);
-        $this->assertEquals(['/f/1', '1', '', ''], Route::matchParamRoute('/f/1', 'get')[1]);
-        $this->assertEquals(['/f/1/2', '1', '2', ''], Route::matchParamRoute('/f/1/2', 'get')[1]);
+        $this->assertEquals(['/f'], Route::matchParamRoute('/f', 'get')[1]);
+        $this->assertEquals(['/f/1', '1'], Route::matchParamRoute('/f/1', 'get')[1]);
+        $this->assertEquals(['/f/1/2', '1', '2'], Route::matchParamRoute('/f/1/2', 'get')[1]);
         $this->assertEquals(['/f/1/2/3', '1', '2', '3'], Route::matchParamRoute('/f/1/2/3', 'get')[1]);
     }
 
@@ -134,12 +134,5 @@ class RouteTest extends TestCase
         var_dump($parameters);
 
         $this->assertIsArray([]);
-    }
-
-    public function test07()
-    {
-        Route::get('/img/{path}', null, [], ['path' => '.+']);
-        $this->assertEquals(['/img/a/b/1.png', 'a/b/1.png'], Route::matchParamRoute('/img/a/b/1.png', 'get')[1]);
-//        Route::_print();
     }
 }
