@@ -204,6 +204,13 @@
             border-color: var(--accent);
         }
 
+        a.test-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
         .test-btn:active {
             transform: scale(0.97);
         }
@@ -392,26 +399,109 @@
     <div class="header">
         <h1 class="header-title">Lite<span>View</span></h1>
         <p class="header-sub">Route Explorer &mdash; test all defined routes</p>
-        <div class="header-count">{{ routes|length }} routes registered</div>
+        <div class="header-count">10 routes registered</div>
     </div>
 
     <div class="routes" id="routes">
-        {% for route in routes %}
-            <div class="route-row"
-                 data-method="{{ route.fetchMethod }}"
-                 data-path="{{ route.path }}">
-                <div class="route-main">
-                    <span class="method {{ route.cssClass }}">{{ route.method }}</span>
-                    {% if route.isLinkable %}
-                        <span class="route-path"><a href="{{ route.path }}" target="_blank">{{ route.path }}</a></span>
-                    {% else %}
-                        <span class="route-path">{{ route.path }}</span>
-                    {% endif %}
-                    <span class="route-action">{{ route.action }}</span>
-                    <button class="test-btn" onclick="testRoute(this)">Test</button>
-                </div>
+        <!-- GET /demo/visitor -->
+        <div class="route-row" data-path="/demo/visitor">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/demo/visitor</span>
+                <span class="route-action">Closure</span>
+                <a href="/demo/visitor" target="_blank" class="test-btn">Open</a>
             </div>
-        {% endfor %}
+        </div>
+
+        <!-- GET /demo/user/{id} -->
+        <div class="route-row" data-path="/demo/user/{id}">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/demo/user/{id}</span>
+                <span class="route-action">Closure</span>
+                <button class="test-btn" onclick="openRouteParams(this)">Open</button>
+            </div>
+        </div>
+
+        <!-- GET /demo/file/{path} -->
+        <div class="route-row" data-path="/demo/file/{path}">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/demo/file/{path}</span>
+                <span class="route-action">Closure</span>
+                <button class="test-btn" onclick="openRouteParams(this)">Open</button>
+            </div>
+        </div>
+
+        <!-- GET /demo/mw -->
+        <div class="route-row" data-path="/demo/mw">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/demo/mw</span>
+                <span class="route-action">Closure</span>
+                <a href="/demo/mw" target="_blank" class="test-btn">Open</a>
+            </div>
+        </div>
+
+        <!-- GET /demo/error -->
+        <div class="route-row" data-path="/demo/error">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/demo/error</span>
+                <span class="route-action">Closure</span>
+                <a href="/demo/error" target="_blank" class="test-btn">Open</a>
+            </div>
+        </div>
+
+        <!-- GET /api/users -->
+        <div class="route-row" data-path="/api/users">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/api/users</span>
+                <span class="route-action">DemoController@index</span>
+                <a href="/api/users" target="_blank" class="test-btn">Open</a>
+            </div>
+        </div>
+
+        <!-- POST /api/users -->
+        <div class="route-row" data-path="/api/users" data-method="POST">
+            <div class="route-main">
+                <span class="method m-post">POST</span>
+                <span class="route-path">/api/users</span>
+                <span class="route-action">DemoController@store</span>
+                <button class="test-btn" onclick="testRoute(this)">Test</button>
+            </div>
+        </div>
+
+        <!-- GET /api/users/{id} -->
+        <div class="route-row" data-path="/api/users/{id}">
+            <div class="route-main">
+                <span class="method m-get">GET</span>
+                <span class="route-path">/api/users/{id}</span>
+                <span class="route-action">DemoController@show</span>
+                <button class="test-btn" onclick="openRouteParams(this)">Open</button>
+            </div>
+        </div>
+
+        <!-- PUT /api/users/{id} -->
+        <div class="route-row" data-path="/api/users/{id}" data-method="PUT">
+            <div class="route-main">
+                <span class="method m-put">PUT</span>
+                <span class="route-path">/api/users/{id}</span>
+                <span class="route-action">DemoController@update</span>
+                <button class="test-btn" onclick="testRoute(this)">Test</button>
+            </div>
+        </div>
+
+        <!-- DELETE /api/users/{id} -->
+        <div class="route-row" data-path="/api/users/{id}" data-method="DELETE">
+            <div class="route-main">
+                <span class="method m-delete">DELETE</span>
+                <span class="route-path">/api/users/{id}</span>
+                <span class="route-action">DemoController@destroy</span>
+                <button class="test-btn" onclick="testRoute(this)">Test</button>
+            </div>
+        </div>
     </div>
 
     <div class="footer">Lite<span>View</span> Framework</div>
@@ -453,6 +543,29 @@ function testRoute(btn) {
     }
 }
 
+function openRouteParams(btn) {
+    var row = btn.closest('.route-row');
+    var params = row.querySelector('.param-row');
+    if (params) {
+        params.remove();
+        row.classList.remove('active');
+        return;
+    }
+    var path = row.dataset.path;
+    showParamInputs(row, null, path, btn);
+}
+
+function removeRoutePanel(btn) {
+    var row = btn.closest('.route-row');
+    var panel = row.querySelector('.response-panel');
+    if (panel) panel.remove();
+    params = row.querySelector('.param-row');
+    if (params) params.remove();
+    row.classList.remove('active');
+    var testBtn = row.querySelector('.test-btn');
+    if (testBtn) testBtn.textContent = 'Test';
+}
+
 function showParamInputs(row, method, path, btn) {
     var matches = path.match(/\{[^}]+\}/g);
     if (!matches) return;
@@ -483,21 +596,43 @@ function showParamInputs(row, method, path, btn) {
         div.appendChild(group);
     }
 
-    var sendBtn = document.createElement('button');
-    sendBtn.className = 'send-btn';
-    sendBtn.textContent = 'Send';
-    sendBtn.onclick = function () {
-        var resolved = path;
-        var inputs = div.querySelectorAll('input[data-param]');
-        for (var j = 0; j < inputs.length; j++) {
-            var p = inputs[j].getAttribute('data-param');
-            var v = inputs[j].value || p;
-            resolved = resolved.replace('{' + p + '}', encodeURIComponent(v));
-        }
-        div.remove();
-        sendRequest(row, method, resolved, btn);
-    };
-    div.appendChild(sendBtn);
+    var isApi = row.hasAttribute('data-method');
+    var actionBtn;
+    if (isApi) {
+        actionBtn = document.createElement('button');
+        actionBtn.className = 'send-btn';
+        actionBtn.textContent = 'Send';
+        actionBtn.onclick = function () {
+            var resolved = path;
+            var inputs = div.querySelectorAll('input[data-param]');
+            for (var j = 0; j < inputs.length; j++) {
+                var p = inputs[j].getAttribute('data-param');
+                var v = inputs[j].value || p;
+                resolved = resolved.replace('{' + p + '}', encodeURIComponent(v));
+            }
+            div.remove();
+            sendRequest(row, method, resolved, btn);
+        };
+    } else {
+        actionBtn = document.createElement('a');
+        actionBtn.href = '#';
+        actionBtn.className = 'send-btn';
+        actionBtn.style.textDecoration = 'none';
+        actionBtn.target = '_blank';
+        actionBtn.textContent = 'Open';
+        actionBtn.onclick = function (e) {
+            e.preventDefault();
+            var resolved = path;
+            var inputs = div.querySelectorAll('input[data-param]');
+            for (var j = 0; j < inputs.length; j++) {
+                var p = inputs[j].getAttribute('data-param');
+                var v = inputs[j].value || p;
+                resolved = resolved.replace('{' + p + '}', encodeURIComponent(v));
+            }
+            window.open(resolved, '_blank');
+        };
+    }
+    div.appendChild(actionBtn);
 
     row.appendChild(div);
     row.classList.add('active');
@@ -506,7 +641,7 @@ function showParamInputs(row, method, path, btn) {
     if (first) first.focus();
 
     div.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') sendBtn.click();
+        if (e.key === 'Enter') actionBtn.click();
     });
 }
 

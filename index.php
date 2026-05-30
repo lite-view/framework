@@ -7,6 +7,9 @@ use LiteView\Kernel\Route;
 use LiteView\Kernel\Visitor;
 use LiteView\Kernel\View;
 use LiteView\Support\ApiResourceController;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Monolog\Processor\MemoryUsageProcessor;
 
 class DemoController extends ApiResourceController
 {
@@ -40,6 +43,15 @@ class LogMiddleware
 {
     public function handle(Visitor $v, $next)
     {
+        \LiteView\Support\ToolMan::setCfg('logging', ['default' => [
+            "handlers"   => [
+                new StreamHandler(root_path("storage/logs/main.log"), Logger::DEBUG),
+            ],
+            "processors" => [
+                MemoryUsageProcessor::class
+            ]
+        ]]);
+
         \LiteView\Utils\Log::info('request', ['path' => $v->currentPath()]);
         return $next($v);
     }
@@ -94,46 +106,8 @@ Route::group('api', function () {
 
 // Homepage — render Twig template
 Route::get('/', function (Visitor $visitor) {
-    $rawRoutes = Route::_all_rotes();
-    $routes = [];
-    foreach ($rawRoutes as $pathKey => $targets) {
-        $path = explode('>>>', $pathKey)[0];
-        foreach ($targets as $target) {
-            $methods = is_array($target['method']) ? $target['method'] : [$target['method']];
-            foreach ($methods as $method) {
-                $displayMethod = $method === '*' ? 'ANY' : strtoupper($method);
-                $cssClass = $method === '*' ? 'm-any' : 'm-' . strtolower($method);
-                $isGet = strtolower($method) === 'get';
-                $hasParams = str_contains($path, '{');
-
-                $action = $target['action'];
-                if (is_array($action)) {
-                    $actionStr = (is_object($action[0]) ? get_class($action[0]) : $action[0]) . '@' . $action[1];
-                } elseif (is_string($action)) {
-                    $actionStr = $action;
-                } else {
-                    $actionStr = 'Closure';
-                }
-
-                $fetchMethod = $method === '*' ? 'GET' : strtoupper($method);
-                $isLinkable = $isGet && !$hasParams;
-
-                $routes[] = [
-                    'method'      => $displayMethod,
-                    'cssClass'    => $cssClass,
-                    'path'        => $path,
-                    'action'      => $actionStr,
-                    'fetchMethod' => $fetchMethod,
-                    'isLinkable'  => $isLinkable,
-                ];
-            }
-        }
-    }
-
     View::setVisitor($visitor);
-    return View::renderTwig('index.twig', [
-        'routes' => $routes,
-    ]);
+    return View::renderTwig('index.twig');
 });
 
 // Dispatch

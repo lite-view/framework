@@ -36,10 +36,12 @@ class Log
         if (isset(self::$logging[$name])) {
             return self::$logging[$name];
         }
-        $config = cfg('logging');
-        $config['main'] = self::mainCfg();
-        $channel = $config[$name];
+        $config = array_merge(
+            cfg('logging', []),
+            ['main' => self::mainCfg()]
+        );
 
+        $channel = $config[$name];
         // 创建 logger
         $logger = new Logger($name);
 
@@ -69,7 +71,7 @@ class Log
     protected static function mainCfg(): array
     {
         return [
-            "handlers" => [
+            "handlers"   => [
                 new StreamHandler(root_path("storage/logs/main.log"), Logger::DEBUG),
             ],
             "processors" => [
