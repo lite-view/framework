@@ -1,2 +1,17 @@
 {
+  "debug": true,
+  "trust_proxy": true,
+  "location": "",
+  "app_url": "",
+  "template_path": "/",
+  "app_key": "test_app_key",
+  "api_token_secret": "test_secret_key",
+  "cors": {
+    "paths": [
+      "*"
+    ],
+    "allow_origins": "*",
+    "allow_methods": "POST, GET, OPTIONS",
+    "allow_headers": "*"
+  }
 }

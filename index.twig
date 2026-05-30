@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiteView Framework</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+        h1 span { color: #38bdf8; }
+        .tagline { color: #94a3b8; margin-bottom: 40px; }
+        h2 { font-size: 1rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; margin: 32px 0 12px; }
+        .card { background: #1e293b; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; }
+        .card code { background: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; color: #a5f3fc; }
+        .method { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
+        .m-get { background: #166534; color: #4ade80; }
+        .m-post { background: #1e3a5f; color: #60a5fa; }
+        .m-put { background: #713f12; color: #fbbf24; }
+        .m-delete { background: #7f1d1d; color: #f87171; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+        th { color: #94a3b8; font-weight: 500; border-bottom: 1px solid #334155; }
+        td { border-bottom: 1px solid #1e293b; }
+        td code { color: #a5f3fc; background: none; padding: 0; }
+        .footer { text-align: center; margin-top: 48px; color: #475569; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Lite<span>View</span></h1>
+    <p class="tagline">A lightweight PHP VC framework</p>
+
+    <h2>Routing</h2>
+    <div class="card">
+        {% for route in routes %}
+            <div style="margin-bottom:6px;">
+                {% if route.method == 'GET' %}<span class="method m-get">GET{% elseif route.method == 'POST' %}<span class="method m-post">POST{% elseif route.method == 'PUT/PATCH' %}<span class="method m-put">PUT{% elseif route.method == 'DELETE' %}<span class="method m-delete">DEL{% else %}<span class="method" style="background:#334155;color:#e2e8f0">{{ route.method }}{% endif %}</span><code>{{ route.path }}</code>
+                {% if route.action %}<span style="color:#64748b;margin-left:8px;">→ {{ route.action }}</span>{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2>Try It</h2>
+    <table>
+        <tr><th>Feature</th><th>URL</th></tr>
+        <tr><td>Visitor</td><td><code><a href="/demo/visitor" style="color:#38bdf8">/demo/visitor</a></code></td></tr>
+        <tr><td>Params</td><td><code><a href="/demo/user/42" style="color:#38bdf8">/demo/user/42</a></code></td></tr>
+        <tr><td>Wildcard</td><td><code><a href="/demo/file/docs/readme.md" style="color:#38bdf8">/demo/file/docs/readme.md</a></code></td></tr>
+        <tr><td>Middleware</td><td><code><a href="/demo/mw" style="color:#38bdf8">/demo/mw</a></code></td></tr>
+        <tr><td>ApiResource</td><td><code>POST /api/users</code></td></tr>
+        <tr><td>Error Page</td><td><code><a href="/demo/error" style="color:#38bdf8">/demo/error</a></code></td></tr>
+    </table>
+
+    <h2>Config</h2>
+    <div class="card">
+        <table>
+            <tr><th>Key</th><th>Used In</th><th>Description</th></tr>
+            {% for c in config %}
+            <tr><td><code>{{ c.key }}</code></td><td>{{ c.used }}</td><td>{{ c.desc }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="footer">LiteView Framework &mdash; Twig + Monolog</div>
+</div>
+</body>
+</html>

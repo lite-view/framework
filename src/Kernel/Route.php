@@ -222,6 +222,11 @@ class Route
         }
     }
 
+    public static function _all_rotes(): array
+    {
+        return self::$routes;
+    }
+
     public static function reset(): void
     {
         self::$routes     = [];
