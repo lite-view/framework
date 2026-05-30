@@ -12,6 +12,7 @@ class Visitor
     const SESSION_USER_ID = 'session419028750685ec5af44e5bff70e8a296';
     public $user;
     private $data = [];
+    private $inputCache;
 
     public function __construct()
     {
@@ -23,9 +24,13 @@ class Visitor
 
     public function ip($long = false)
     {
-        $ip = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? $_SERVER["REMOTE_ADDR"];
+        if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]) && cfg('trust_proxy')) {
+            $ip = trim(current(explode(',', $_SERVER["HTTP_X_FORWARDED_FOR"])));
+        } else {
+            $ip = $_SERVER["REMOTE_ADDR"];
+        }
         if ($long) {
-            return ip2long($ip); // 逆函数：long2ip()
+            return ip2long($ip);
         }
         return $ip;
     }
@@ -85,16 +90,19 @@ class Visitor
 
     public function input($key = null, $default = null)
     {
-        $input = array_merge($_GET, $_POST, $this->data);
-        $json  = json_decode(file_get_contents("php://input"), true);
-        if (is_array($json)) {
-            $input = array_merge($input, $json);
+        if (null === $this->inputCache) {
+            $input = array_merge($_GET, $_POST, $this->data);
+            $json  = json_decode(file_get_contents("php://input"), true);
+            if (is_array($json)) {
+                $input = array_merge($input, $json);
+            }
+            $this->inputCache = $input;
         }
         if (is_null($key)) {
-            return new ArrayObject($input, ArrayObject::ARRAY_AS_PROPS);
+            return new ArrayObject($this->inputCache, ArrayObject::ARRAY_AS_PROPS);
         }
-        if (isset($input[$key])) {
-            return $input[$key];
+        if (isset($this->inputCache[$key])) {
+            return $this->inputCache[$key];
         }
         return $default;
     }
