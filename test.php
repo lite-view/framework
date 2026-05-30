@@ -9,5 +9,5 @@ require __DIR__ . '/vendor/autoload.php';
 for ($i = 0; $i < 3; $i++) {
     echo $i;
     echo PHP_EOL;
-    sleep(1);
+    sleep(11);
 }
