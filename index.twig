@@ -3,67 +3,585 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LiteView Framework</title>
+    <title>LiteView — Route Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #F5F3EF;
+            --surface: #FFFFFF;
+            --text: #1C1917;
+            --text-secondary: #78716C;
+            --text-muted: #A8A29E;
+            --accent: #C2410C;
+            --accent-hover: #9A3412;
+            --accent-light: #FFF7ED;
+            --border: #E7E5E4;
+            --border-light: #F0EEEC;
+            --code-bg: #F5F3EF;
+            --get: #059669;
+            --get-bg: #ECFDF5;
+            --post: #2563EB;
+            --post-bg: #EFF6FF;
+            --put: #B45309;
+            --put-bg: #FFFBEB;
+            --delete: #DC2626;
+            --delete-bg: #FEF2F2;
+            --any: #7C3AED;
+            --any-bg: #F5F3FF;
+            --radius: 8px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-        .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
-        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
-        h1 span { color: #38bdf8; }
-        .tagline { color: #94a3b8; margin-bottom: 40px; }
-        h2 { font-size: 1rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; margin: 32px 0 12px; }
-        .card { background: #1e293b; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; }
-        .card code { background: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; color: #a5f3fc; }
-        .method { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
-        .m-get { background: #166534; color: #4ade80; }
-        .m-post { background: #1e3a5f; color: #60a5fa; }
-        .m-put { background: #713f12; color: #fbbf24; }
-        .m-delete { background: #7f1d1d; color: #f87171; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 8px 12px; text-align: left; font-size: 0.9rem; }
-        th { color: #94a3b8; font-weight: 500; border-bottom: 1px solid #334155; }
-        td { border-bottom: 1px solid #1e293b; }
-        td code { color: #a5f3fc; background: none; padding: 0; }
-        .footer { text-align: center; margin-top: 48px; color: #475569; font-size: 0.8rem; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 56px 24px 80px;
+        }
+
+        .header {
+            margin-bottom: 44px;
+            animation: slideDown 0.5s ease both;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        .header-title span {
+            color: var(--accent);
+        }
+
+        .header-sub {
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .header-count {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 14px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--accent);
+            background: var(--accent-light);
+            padding: 3px 12px;
+            border-radius: 100px;
+            border: 1px solid #FDBA74;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .routes {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .route-row {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            opacity: 0;
+            transform: translateY(8px);
+            animation: slideUp 0.35s ease forwards;
+        }
+
+        .route-row:hover {
+            border-color: #D6D3D1;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .route-row.active {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(194,65,12,0.1);
+        }
+
+        .route-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+        }
+
+        .method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 3px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        .m-get    { background: var(--get-bg);    color: var(--get); }
+        .m-post   { background: var(--post-bg);   color: var(--post); }
+        .m-put    { background: var(--put-bg);     color: var(--put); }
+        .m-patch  { background: var(--put-bg);     color: var(--put); }
+        .m-delete { background: var(--delete-bg);  color: var(--delete); }
+        .m-any    { background: var(--any-bg);      color: var(--any); }
+
+        .route-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--text);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .route-path a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px dashed #FDBA74;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .route-path a:hover {
+            color: var(--accent-hover);
+            border-bottom-style: solid;
+            border-bottom-color: var(--accent);
+        }
+
+        .route-action {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .test-btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 4px 14px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        .test-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .test-btn:active {
+            transform: scale(0.97);
+        }
+
+        .test-btn.loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px 12px;
+            flex-wrap: wrap;
+            animation: expandIn 0.2s ease;
+        }
+
+        .param-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .param-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .param-group label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .param-group input {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            padding: 3px 8px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: #FDFCF9;
+            color: var(--text);
+            outline: none;
+            width: 90px;
+            transition: border-color 0.15s;
+        }
+
+        .param-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .param-group input::placeholder {
+            color: #C7C5C2;
+        }
+
+        .send-btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 4px 14px;
+            border-radius: 5px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .send-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .response-panel {
+            border-top: 1px solid var(--border-light);
+            padding: 12px 16px 14px;
+            background: #FDFCF9;
+            animation: expandIn 0.2s ease;
+        }
+
+        .response-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .status-2xx { background: var(--get-bg);    color: var(--get); }
+        .status-3xx { background: var(--put-bg);     color: var(--put); }
+        .status-4xx { background: var(--delete-bg);  color: var(--delete); }
+        .status-5xx { background: var(--delete-bg);  color: var(--delete); }
+        .status-err { background: var(--delete-bg);  color: var(--delete); }
+
+        .response-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .close-btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            background: none;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+            transition: all 0.15s;
+        }
+
+        .close-btn:hover {
+            color: var(--text);
+            border-color: #D6D3D1;
+        }
+
+        .response-body {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+            line-height: 1.55;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 320px;
+            overflow-y: auto;
+            color: var(--text);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes expandIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        .response-body::-webkit-scrollbar { width: 5px; }
+        .response-body::-webkit-scrollbar-track { background: transparent; }
+        .response-body::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 3px; }
+
+        .footer {
+            text-align: center;
+            margin-top: 56px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            animation: slideUp 0.5s ease 0.3s both;
+        }
+
+        .footer span { color: var(--accent); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .header, .route-row, .footer { animation: none; opacity: 1; transform: none; }
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 32px 16px 60px; }
+            .header-title { font-size: 1.8rem; }
+            .route-action { display: none; }
+            .route-main { padding: 10px 12px; gap: 8px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Lite<span>View</span></h1>
-    <p class="tagline">A lightweight PHP VC framework</p>
+    <div class="header">
+        <h1 class="header-title">Lite<span>View</span></h1>
+        <p class="header-sub">Route Explorer &mdash; test all defined routes</p>
+        <div class="header-count">{{ routes|length }} routes registered</div>
+    </div>
 
-    <h2>Routing</h2>
-    <div class="card">
+    <div class="routes" id="routes">
         {% for route in routes %}
-            <div style="margin-bottom:6px;">
-                {% if route.method == 'GET' %}<span class="method m-get">GET{% elseif route.method == 'POST' %}<span class="method m-post">POST{% elseif route.method == 'PUT/PATCH' %}<span class="method m-put">PUT{% elseif route.method == 'DELETE' %}<span class="method m-delete">DEL{% else %}<span class="method" style="background:#334155;color:#e2e8f0">{{ route.method }}{% endif %}</span><code>{{ route.path }}</code>
-                {% if route.action %}<span style="color:#64748b;margin-left:8px;">→ {{ route.action }}</span>{% endif %}
+            <div class="route-row"
+                 data-method="{{ route.fetchMethod }}"
+                 data-path="{{ route.path }}">
+                <div class="route-main">
+                    <span class="method {{ route.cssClass }}">{{ route.method }}</span>
+                    {% if route.isLinkable %}
+                        <span class="route-path"><a href="{{ route.path }}" target="_blank">{{ route.path }}</a></span>
+                    {% else %}
+                        <span class="route-path">{{ route.path }}</span>
+                    {% endif %}
+                    <span class="route-action">{{ route.action }}</span>
+                    <button class="test-btn" onclick="testRoute(this)">Test</button>
+                </div>
             </div>
         {% endfor %}
     </div>
 
-    <h2>Try It</h2>
-    <table>
-        <tr><th>Feature</th><th>URL</th></tr>
-        <tr><td>Visitor</td><td><code><a href="/demo/visitor" style="color:#38bdf8">/demo/visitor</a></code></td></tr>
-        <tr><td>Params</td><td><code><a href="/demo/user/42" style="color:#38bdf8">/demo/user/42</a></code></td></tr>
-        <tr><td>Wildcard</td><td><code><a href="/demo/file/docs/readme.md" style="color:#38bdf8">/demo/file/docs/readme.md</a></code></td></tr>
-        <tr><td>Middleware</td><td><code><a href="/demo/mw" style="color:#38bdf8">/demo/mw</a></code></td></tr>
-        <tr><td>ApiResource</td><td><code>POST /api/users</code></td></tr>
-        <tr><td>Error Page</td><td><code><a href="/demo/error" style="color:#38bdf8">/demo/error</a></code></td></tr>
-    </table>
-
-    <h2>Config</h2>
-    <div class="card">
-        <table>
-            <tr><th>Key</th><th>Used In</th><th>Description</th></tr>
-            {% for c in config %}
-            <tr><td><code>{{ c.key }}</code></td><td>{{ c.used }}</td><td>{{ c.desc }}</td></tr>
-            {% endfor %}
-        </table>
-    </div>
-
-    <div class="footer">LiteView Framework &mdash; Twig + Monolog</div>
+    <div class="footer">Lite<span>View</span> Framework</div>
 </div>
+
+<script>
+(function () {
+    var rows = document.querySelectorAll('.route-row');
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].style.animationDelay = (i * 0.03) + 's';
+    }
+})();
+
+function testRoute(btn) {
+    var row = btn.closest('.route-row');
+    var panel = row.querySelector('.response-panel');
+    var params = row.querySelector('.param-row');
+
+    if (panel) {
+        panel.remove();
+        if (params) params.remove();
+        row.classList.remove('active');
+        return;
+    }
+    if (params) {
+        params.remove();
+        row.classList.remove('active');
+        return;
+    }
+
+    var method = row.dataset.method;
+    var path = row.dataset.path;
+    var hasParams = /\{[^}]+\}/.test(path);
+
+    if (hasParams) {
+        showParamInputs(row, method, path, btn);
+    } else {
+        sendRequest(row, method, path, btn);
+    }
+}
+
+function showParamInputs(row, method, path, btn) {
+    var matches = path.match(/\{[^}]+\}/g);
+    if (!matches) return;
+
+    var div = document.createElement('div');
+    div.className = 'param-row';
+
+    var label = document.createElement('span');
+    label.className = 'param-label';
+    label.textContent = 'Params:';
+    div.appendChild(label);
+
+    for (var i = 0; i < matches.length; i++) {
+        var name = matches[i].replace(/[{}]/g, '');
+        var group = document.createElement('div');
+        group.className = 'param-group';
+
+        var lbl = document.createElement('label');
+        lbl.textContent = name;
+        group.appendChild(lbl);
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('data-param', name);
+        input.placeholder = name;
+        group.appendChild(input);
+
+        div.appendChild(group);
+    }
+
+    var sendBtn = document.createElement('button');
+    sendBtn.className = 'send-btn';
+    sendBtn.textContent = 'Send';
+    sendBtn.onclick = function () {
+        var resolved = path;
+        var inputs = div.querySelectorAll('input[data-param]');
+        for (var j = 0; j < inputs.length; j++) {
+            var p = inputs[j].getAttribute('data-param');
+            var v = inputs[j].value || p;
+            resolved = resolved.replace('{' + p + '}', encodeURIComponent(v));
+        }
+        div.remove();
+        sendRequest(row, method, resolved, btn);
+    };
+    div.appendChild(sendBtn);
+
+    row.appendChild(div);
+    row.classList.add('active');
+
+    var first = div.querySelector('input');
+    if (first) first.focus();
+
+    div.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') sendBtn.click();
+    });
+}
+
+function sendRequest(row, method, path, btn) {
+    btn.textContent = '...';
+    btn.classList.add('loading');
+    row.classList.add('active');
+
+    var start = performance.now();
+    var options = { method: method, headers: { 'Accept': 'application/json' } };
+    if (method !== 'GET' && method !== 'HEAD') {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify({});
+    }
+
+    fetch(path, options)
+        .then(function (r) {
+            return r.text().then(function (body) {
+                return { status: r.status, statusText: r.statusText, body: body, time: Math.round(performance.now() - start) };
+            });
+        })
+        .then(function (result) {
+            var display = result.body;
+            try { display = JSON.stringify(JSON.parse(result.body), null, 2); } catch (e) {}
+            showResponse(row, result.status, result.statusText, result.time + 'ms', display);
+        })
+        .catch(function (err) {
+            showResponse(row, 0, 'Network Error', Math.round(performance.now() - start) + 'ms', err.message);
+        })
+        .finally(function () {
+            btn.textContent = 'Test';
+            btn.classList.remove('loading');
+        });
+}
+
+function showResponse(row, status, statusText, time, body) {
+    var old = row.querySelector('.response-panel');
+    if (old) old.remove();
+    var oldParams = row.querySelector('.param-row');
+    if (oldParams) oldParams.remove();
+
+    var cls = 'status-err';
+    if (status >= 200 && status < 300) cls = 'status-2xx';
+    else if (status >= 300 && status < 400) cls = 'status-3xx';
+    else if (status >= 400 && status < 500) cls = 'status-4xx';
+    else if (status >= 500) cls = 'status-5xx';
+
+    var panel = document.createElement('div');
+    panel.className = 'response-panel';
+    panel.innerHTML =
+        '<div class="response-meta">' +
+            '<span class="status-badge ' + cls + '">' + (status || 'ERR') + ' ' + statusText + '</span>' +
+            '<span class="response-time">' + time + '</span>' +
+            '<button class="close-btn" onclick="closeResponse(this)">&times; close</button>' +
+        '</div>' +
+        '<div class="response-body">' + escapeHtml(body) + '</div>';
+    row.appendChild(panel);
+}
+
+function closeResponse(btn) {
+    var row = btn.closest('.route-row');
+    var panel = row.querySelector('.response-panel');
+    if (panel) panel.remove();
+    var params = row.querySelector('.param-row');
+    if (params) params.remove();
+    row.classList.remove('active');
+    var testBtn = row.querySelector('.test-btn');
+    if (testBtn) testBtn.textContent = 'Test';
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
 </body>
 </html>

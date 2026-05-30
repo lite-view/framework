@@ -94,21 +94,45 @@ Route::group('api', function () {
 
 // Homepage — render Twig template
 Route::get('/', function (Visitor $visitor) {
+    $rawRoutes = Route::_all_rotes();
+    $routes = [];
+    foreach ($rawRoutes as $pathKey => $targets) {
+        $path = explode('>>>', $pathKey)[0];
+        foreach ($targets as $target) {
+            $methods = is_array($target['method']) ? $target['method'] : [$target['method']];
+            foreach ($methods as $method) {
+                $displayMethod = $method === '*' ? 'ANY' : strtoupper($method);
+                $cssClass = $method === '*' ? 'm-any' : 'm-' . strtolower($method);
+                $isGet = strtolower($method) === 'get';
+                $hasParams = str_contains($path, '{');
+
+                $action = $target['action'];
+                if (is_array($action)) {
+                    $actionStr = (is_object($action[0]) ? get_class($action[0]) : $action[0]) . '@' . $action[1];
+                } elseif (is_string($action)) {
+                    $actionStr = $action;
+                } else {
+                    $actionStr = 'Closure';
+                }
+
+                $fetchMethod = $method === '*' ? 'GET' : strtoupper($method);
+                $isLinkable = $isGet && !$hasParams;
+
+                $routes[] = [
+                    'method'      => $displayMethod,
+                    'cssClass'    => $cssClass,
+                    'path'        => $path,
+                    'action'      => $actionStr,
+                    'fetchMethod' => $fetchMethod,
+                    'isLinkable'  => $isLinkable,
+                ];
+            }
+        }
+    }
+
     View::setVisitor($visitor);
     return View::renderTwig('index.twig', [
-        'routes' => Route::_all_rotes(),
-        'config' => [
-            ['key' => 'debug', 'used' => 'Dispatcher', 'desc' => 'Show error details when true'],
-            ['key' => 'app_env', 'used' => 'Dispatcher', 'desc' => 'Environment name, loads config.{app_env}.json'],
-            ['key' => 'app_url', 'used' => 'domain()', 'desc' => 'App URL override'],
-            ['key' => 'app_key', 'used' => 'ApiToken', 'desc' => 'Secret key for password hashing'],
-            ['key' => 'api_token_secret', 'used' => 'ApiToken', 'desc' => 'Secret key for API token signing'],
-            ['key' => 'location', 'used' => 'Route, Visitor', 'desc' => 'URL prefix for multi-directory deployment'],
-            ['key' => 'trust_proxy', 'used' => 'Visitor::ip()', 'desc' => 'Trust X-Forwarded-For header'],
-            ['key' => 'template_path', 'used' => 'View', 'desc' => 'Twig template directory (default: resources/views/)'],
-            ['key' => 'cors', 'used' => 'cors()', 'desc' => 'CORS config: paths, allow_origins, allow_methods, allow_headers'],
-            ['key' => 'logging', 'used' => 'Log', 'desc' => 'Monolog channel definitions'],
-        ],
+        'routes' => $routes,
     ]);
 });
 
