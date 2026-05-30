@@ -454,12 +454,12 @@
         </div>
 
         <!-- GET /api/users -->
-        <div class="route-row" data-path="/api/users">
+        <div class="route-row" data-path="/api/users" data-method="GET">
             <div class="route-main">
                 <span class="method m-get">GET</span>
                 <span class="route-path">/api/users</span>
                 <span class="route-action">DemoController@index</span>
-                <a href="/api/users" target="_blank" class="test-btn">Open</a>
+                <button class="test-btn" onclick="testRoute(this)">Test</button>
             </div>
         </div>
 
@@ -474,12 +474,12 @@
         </div>
 
         <!-- GET /api/users/{id} -->
-        <div class="route-row" data-path="/api/users/{id}">
+        <div class="route-row" data-path="/api/users/{id}" data-method="GET">
             <div class="route-main">
                 <span class="method m-get">GET</span>
                 <span class="route-path">/api/users/{id}</span>
                 <span class="route-action">DemoController@show</span>
-                <button class="test-btn" onclick="openRouteParams(this)">Open</button>
+                <button class="test-btn" onclick="testRoute(this)">Test</button>
             </div>
         </div>
 
