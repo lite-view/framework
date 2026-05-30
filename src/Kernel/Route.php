@@ -105,10 +105,22 @@ class Route
         self::$middleware = $bak_middleware;
     }
 
+    public static function apiResource($path, $controller, $middleware = [])
+    {
+        self::get($path, [$controller, 'index'], $middleware);
+        self::post($path, [$controller, 'store'], $middleware);
+        self::get($path . '/{id}', [$controller, 'show'], $middleware);
+        self::rule(['PUT', 'PATCH'], $path . '/{id}', [$controller, 'update'], $middleware);
+        self::rule('DELETE', $path . '/{id}', [$controller, 'destroy'], $middleware);
+    }
+
     public static function quick($path, $controller, $middleware = [])
     {
         $methods = get_class_methods($controller);
         foreach ($methods as $action) {
+            if (0 === strpos($action, '__')) {
+                continue;
+            }
             self::rule(['GET', 'POST'], rtrim($path, '/') . "/$action", [$controller, $action], $middleware);
         }
     }
