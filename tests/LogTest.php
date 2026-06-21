@@ -2,11 +2,10 @@
 
 namespace Test;
 
-use LiteView\Utils\Log;
-use Monolog\Logger;
+use LiteView\Support\Log;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Monolog\Processor\MemoryUsageProcessor;
-
 use PHPUnit\Framework\TestCase;
 
 class LogTest extends TestCase

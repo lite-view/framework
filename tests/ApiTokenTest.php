@@ -2,7 +2,7 @@
 
 namespace Test;
 
-use LiteView\Utils\ApiToken;
+use LiteView\Support\ApiToken;
 use PHPUnit\Framework\TestCase;
 
 class ApiTokenTest extends TestCase

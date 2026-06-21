@@ -79,7 +79,7 @@ class Dispatcher
         }
 
         try {
-            \LiteView\Utils\Log::employ('main')->error('SystemError', $msg);
+            \LiteView\Support\Log::employ('main')->error('SystemError', $msg);
             if (!cfg('debug')) {
                 echo self::$error_display;
                 return;

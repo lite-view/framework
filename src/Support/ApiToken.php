@@ -1,7 +1,7 @@
 <?php
 
 
-namespace LiteView\Utils;
+namespace LiteView\Support;
 
 
 class ApiToken

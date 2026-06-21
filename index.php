@@ -4,8 +4,8 @@ const WORKING_DIR = __FILE__;
 require_once __DIR__ . '/vendor/autoload.php';
 
 use LiteView\Kernel\Route;
-use LiteView\Kernel\Visitor;
 use LiteView\Kernel\View;
+use LiteView\Kernel\Visitor;
 use LiteView\Support\ApiResourceController;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -52,7 +52,7 @@ class LogMiddleware
             ]
         ]]);
 
-        \LiteView\Utils\Log::info('request', ['path' => $v->currentPath()]);
+        \LiteView\Support\Log::info('request', ['path' => $v->currentPath()]);
         return $next($v);
     }
 }
