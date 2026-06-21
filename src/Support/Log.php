@@ -3,30 +3,32 @@
 namespace LiteView\Support;
 
 
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Processor\MemoryUsageProcessor;
-use Psr\Log\AbstractLogger;
 
 
-class Log extends AbstractLogger
+/**
+ * @method static void alert(string $message, array $context = [])
+ * @method static void critical(string $message, array $context = [])
+ * @method static void debug(string $message, array $context = [])
+ * @method static void emergency(string $message, array $context = [])
+ * @method static void error(string $message, array $context = [])
+ * @method static void info(string $message, array $context = [])
+ * @method static void log($level, string $message, array $context = [])
+ * @method static void notice(string $message, array $context = [])
+ * @method static void warning(string $message, array $context = [])
+ */
+class Log
 {
-    protected static array $logging = [];
+    protected static $logging = [];
 
+    // 当调用一个不存在的静态方法时，会自动调用 __callstatic()
     public static function __callstatic($method, $args)
     {
         $logger = self::employ();
         return call_user_func_array([$logger, $method], $args);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function log($level, $message, array $context = []): void
-    {
-        $logger = self::employ();
-        $logger->log($level, $message, $context);
     }
 
     public static function employ($name = 'default'): Logger
@@ -39,23 +41,25 @@ class Log extends AbstractLogger
             ['main' => self::mainCfg()]
         );
 
-        $cfg = $config[$name];
+        $channel = $config[$name];
+        // 创建 logger
         $logger = new Logger($name);
 
-        $handlers = $cfg['handlers'];
+        // push handler
+        $handlers = $channel['handlers'];
         if (is_callable($handlers)) {
             $handlers = $handlers();
-        }
-        if (!is_array($handlers)) {
+        } elseif (!is_array($handlers)) {
             $handlers = [$handlers];
         }
         foreach ($handlers as $handler) {
-            $handler->setFormatter(self::lineFormatter($cfg));
+            $handler->setFormatter(self::lineFormatter($channel));
             $logger->pushHandler($handler);
         }
 
-        if (isset($cfg['processors'])) {
-            foreach ($cfg['processors'] as $class) {
+        // push processor
+        if (isset($channel['processors'])) {
+            foreach ($channel['processors'] as $class) {
                 $logger->pushProcessor(new $class());
             }
         }
@@ -64,6 +68,7 @@ class Log extends AbstractLogger
         return self::$logging[$name];
     }
 
+    //=======================[默认配置]=======================
     protected static function mainCfg(): array
     {
         return [
@@ -76,12 +81,13 @@ class Log extends AbstractLogger
         ];
     }
 
-    protected static function lineFormatter($cfg): LineFormatter
+    protected static function lineFormatter($channel): LineFormatter
     {
         $dateFormat = "Y-m-d H:i:s";
+        // the default output format is "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n"
         $output = "%datetime% > %level_name% > %message% %context% %extra%\n";
-        if (!empty($cfg['format'])) {
-            $output = $cfg['format'];
+        if (!empty($channel['format'])) {
+            $output = $channel['format'];
         }
         return new LineFormatter($output, $dateFormat);
     }

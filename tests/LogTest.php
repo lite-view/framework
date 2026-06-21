@@ -50,6 +50,7 @@ class LogTest extends TestCase
         Log::employ('test2')->info('2');
         Log::employ('test3')->info('3');
         Log::employ('test3')->info('3');
+//        Log::info('info');
         $this->assertEquals(1, 1);
     }
 }
