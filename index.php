@@ -3,6 +3,7 @@
 const WORKING_DIR = __FILE__;
 require_once __DIR__ . '/vendor/autoload.php';
 
+use LiteView\Exception\NotFoundException;
 use LiteView\Kernel\Route;
 use LiteView\Kernel\View;
 use LiteView\Kernel\Visitor;
@@ -111,11 +112,26 @@ Route::get('/', function (Visitor $visitor) {
 });
 
 // Dispatch
+class Em extends \LiteView\Exception\ExceptionManager
+{
+    public bool $use = true;
+
+    public function handle(array $msg, ?\Throwable $exception = null): bool
+    {
+        if ($exception instanceof \LiteView\Exception\NotFoundException) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Not Found', 'msg' => $msg]);
+            return true;
+        }
+        return false;
+    }
+}
+
+\LiteView\Support\Dispatcher::$exceptionManager = new Em();
 [$target, $params] = Route::match();
 if ($target) {
     $rsp = \LiteView\Support\Dispatcher::work($target, $params, new Visitor());
     echo $rsp;
 } else {
-    http_response_code(404);
-    echo json_encode(['error' => 'Not Found']);
+    throw new \LiteView\Exception\NotFoundException('no route found');
 }
