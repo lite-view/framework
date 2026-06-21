@@ -60,7 +60,7 @@ class Dispatcher
         );
 
         // 执行闭包链
-        return call_user_func_array($pipeline, $params);
+        return call_user_func($pipeline, $visitor);
     }
 
     // 异常打印
@@ -93,11 +93,16 @@ class Dispatcher
                 }
             }
 
-            /*
-             * $exception 为 null 的场景：
-             * register_shutdown_function 中 error_get_last() 捕获致命错误
-             * （E_ERROR/E_PARSE 等）时，只有 $msg 而无 Exception 对象
-             */
+            if ($exception === null) {
+                $exception = new \ErrorException(
+                    $msg['message'],
+                    $msg['type'] ?? 0,
+                    $msg['type'] ?? 0,
+                    $msg['file'] ?? '',
+                    $msg['line'] ?? 0
+                );
+            }
+
             if ('cli' === PHP_SAPI) {
                 dump($msg);
             } else {
