@@ -22,10 +22,10 @@ use Monolog\Processor\MemoryUsageProcessor;
  */
 class Log
 {
-    protected static $logging = [];
+    protected static array $loggers = [];
+    protected static ?array $defaultCfgCache;
 
-    // 当调用一个不存在的静态方法时，会自动调用 __callstatic()
-    public static function __callstatic($method, $args)
+    public static function __callStatic($method, $args)
     {
         $logger = self::employ();
         return call_user_func_array([$logger, $method], $args);
@@ -33,21 +33,18 @@ class Log
 
     public static function employ($name = 'default'): Logger
     {
-        if (isset(self::$logging[$name])) {
-            return self::$logging[$name];
+        if (isset(self::$loggers[$name])) {
+            return self::$loggers[$name];
         }
-        $config = array_merge(
-            cfg('logging', []),
-            ['main' => self::mainCfg()]
-        );
+        $config = array_merge(cfg('logging', []), ['default' => self::defaultCfg()]);
 
         $channel = $config[$name];
-        // 创建 logger
-        $logger = new Logger($name);
+        $logger  = new Logger($name); // 创建 logger
 
         // push handler
         $handlers = $channel['handlers'];
         if (is_callable($handlers)) {
+            // 延迟（lazy）创建 handler
             $handlers = $handlers();
         } elseif (!is_array($handlers)) {
             $handlers = [$handlers];
@@ -64,21 +61,24 @@ class Log
             }
         }
 
-        self::$logging[$name] = $logger;
-        return self::$logging[$name];
+        self::$loggers[$name] = $logger;
+        return self::$loggers[$name];
     }
 
     //=======================[默认配置]=======================
-    protected static function mainCfg(): array
+    protected static function defaultCfg(): array
     {
-        return [
-            "handlers"   => [
-                new StreamHandler(root_path("storage/logs/main.log"), Logger::DEBUG),
-            ],
-            "processors" => [
-                MemoryUsageProcessor::class
-            ]
-        ];
+        if (self::$defaultCfgCache === null) {
+            self::$defaultCfgCache = [
+                "handlers"   => [
+                    new StreamHandler(root_path("storage/logs/app.log"), Logger::DEBUG),
+                ],
+                "processors" => [
+                    MemoryUsageProcessor::class
+                ]
+            ];
+        }
+        return self::$defaultCfgCache;
     }
 
     protected static function lineFormatter($channel): LineFormatter
