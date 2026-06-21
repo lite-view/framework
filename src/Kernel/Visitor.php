@@ -92,9 +92,13 @@ class Visitor
     {
         if (null === $this->inputCache) {
             $input = array_merge($_GET, $_POST, $this->data);
-            $json  = json_decode(file_get_contents("php://input"), true);
-            if (is_array($json)) {
-                $input = array_merge($input, $json);
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+            if (stripos($contentType, 'application/json') !== false) {
+                $rawInput = file_get_contents("php://input");
+                $json = json_decode($rawInput, true);
+                if (is_array($json)) {
+                    $input = array_merge($input, $json);
+                }
             }
             $this->inputCache = $input;
         }
