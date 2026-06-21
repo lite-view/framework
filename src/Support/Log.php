@@ -39,10 +39,10 @@ class Log extends AbstractLogger
             ['main' => self::mainCfg()]
         );
 
-        $channel = $config[$name];
+        $cfg = $config[$name];
         $logger = new Logger($name);
 
-        $handlers = $channel['handlers'];
+        $handlers = $cfg['handlers'];
         if (is_callable($handlers)) {
             $handlers = $handlers();
         }
@@ -50,12 +50,12 @@ class Log extends AbstractLogger
             $handlers = [$handlers];
         }
         foreach ($handlers as $handler) {
-            $handler->setFormatter(self::lineFormatter($channel));
+            $handler->setFormatter(self::lineFormatter($cfg));
             $logger->pushHandler($handler);
         }
 
-        if (isset($channel['processors'])) {
-            foreach ($channel['processors'] as $class) {
+        if (isset($cfg['processors'])) {
+            foreach ($cfg['processors'] as $class) {
                 $logger->pushProcessor(new $class());
             }
         }
@@ -76,12 +76,12 @@ class Log extends AbstractLogger
         ];
     }
 
-    protected static function lineFormatter($channel): LineFormatter
+    protected static function lineFormatter($cfg): LineFormatter
     {
         $dateFormat = "Y-m-d H:i:s";
         $output = "%datetime% > %level_name% > %message% %context% %extra%\n";
-        if (!empty($channel['format'])) {
-            $output = $channel['format'];
+        if (!empty($cfg['format'])) {
+            $output = $cfg['format'];
         }
         return new LineFormatter($output, $dateFormat);
     }
