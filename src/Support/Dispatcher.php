@@ -66,10 +66,16 @@ class Dispatcher
     public static function exceptionPrint(array $msg, \Throwable $exception = null)
     {
         if (!empty($_SERVER['HTTP_HOST'])) {
-            if (ob_get_contents()) {
-                ob_clean(); // 在浏览器中时清除之前的输出
+            // ob_get_contents() — 返回当前输出缓冲区的内容（字符串）。如果没开启缓冲区则返回 false。缓冲区激活但无内容时返回空字符串 ""，此时 empty("") 为 true，导致误判为"没有缓冲区"而跳过清理。
+            // ob_get_level() — 返回输出缓冲区的嵌套层数（整数）。未开启时返回 0，开启后 ≥ 1。不依赖缓冲区内容，所以 ob_get_level() > 0 能准确判断是否有活动缓冲区，更可靠。
+            // 清理输出缓冲区，确保错误信息不被之前的内容干扰
+            if (ob_get_level() > 0) {
+                ob_clean();
             }
-            header("HTTP/1.1 500 Internal Server Error");
+
+            // header("HTTP/1.1 500 Internal Server Error");
+            // header("Status: 500 Internal Server Error"); // FastCGI/PHP-FPM 兼容的状态头写法
+            http_response_code(500); //（PHP 5.4+）
         }
 
         try {
@@ -86,14 +92,15 @@ class Dispatcher
                 }
             }
 
-            if ($exception instanceof \Throwable) {
-                if ('cli' === PHP_SAPI) {
-                    dump($msg);
-                } else {
-                    require_once __DIR__ . '/../exception.php';
-                }
-            } else {
+            /*
+             * $exception 为 null 的场景：
+             * register_shutdown_function 中 error_get_last() 捕获致命错误
+             * （E_ERROR/E_PARSE 等）时，只有 $msg 而无 Exception 对象
+             */
+            if ('cli' === PHP_SAPI) {
                 dump($msg);
+            } else {
+                require_once __DIR__ . '/../exception.php';
             }
         } catch (\Exception $e) {
             echo 'Dispatcher@exceptionPrint: ' . $e->getMessage();
