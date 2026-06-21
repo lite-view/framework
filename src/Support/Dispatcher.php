@@ -11,7 +11,6 @@ use LiteView\Kernel\Visitor;
 class Dispatcher
 {
     public static ?ExceptionManager $exceptionManager = null;
-    public static string $error_display = '系统繁忙';
 
     // 根据环境加载配置
     public static function checkEnv()
@@ -81,10 +80,6 @@ class Dispatcher
 
         try {
             \LiteView\Support\Log::error('SystemError', $msg);
-            if (!cfg('debug')) {
-                echo self::$error_display;
-                return;
-            }
 
             if (self::$exceptionManager && self::$exceptionManager->use) {
                 $stop = self::$exceptionManager->handle($msg, $exception);
