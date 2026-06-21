@@ -11,6 +11,7 @@ use LiteView\Kernel\Visitor;
 class Dispatcher
 {
     public static ?ExceptionManager $exceptionManager = null;
+    public static string $error_display = '系统繁忙';
 
     // 根据环境加载配置
     public static function checkEnv()
@@ -98,6 +99,10 @@ class Dispatcher
                 );
             }
 
+            if (!cfg('debug')) {
+                echo self::$error_display;
+                return;
+            }
             if ('cli' === PHP_SAPI) {
                 dump($msg);
             } else {
