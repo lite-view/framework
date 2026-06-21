@@ -4,7 +4,7 @@ namespace LiteView\Exception;
 
 abstract class ExceptionManager
 {
-    public $use;
+    public bool $use = false;
 
-    abstract public function handle(array $msg, \Throwable $exception = null): bool;
+    abstract public function handle(array $msg, ?\Throwable $exception = null): bool;
 }
