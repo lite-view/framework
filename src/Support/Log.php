@@ -23,20 +23,20 @@ use Monolog\Processor\MemoryUsageProcessor;
 class Log
 {
     protected static array $loggers = [];
-    protected static ?array $defaultCfgCache;
+    protected static ?array $defaultCfgCache = null;
 
     public static function __callStatic($method, $args)
     {
-        $logger = self::employ();
+        $logger = self::channel();
         return call_user_func_array([$logger, $method], $args);
     }
 
-    public static function employ($name = 'default'): Logger
+    public static function channel($name = 'default'): Logger
     {
         if (isset(self::$loggers[$name])) {
             return self::$loggers[$name];
         }
-        $config = array_merge(cfg('logging', []), ['default' => self::defaultCfg()]);
+        $config = array_merge(['default' => self::defaultCfg()], cfg('logging', []));
 
         $channel = $config[$name];
         $logger  = new Logger($name); // 创建 logger
@@ -44,8 +44,7 @@ class Log
         // push handler
         $handlers = $channel['handlers'];
         if (is_callable($handlers)) {
-            // 延迟（lazy）创建 handler
-            $handlers = $handlers();
+            $handlers = $handlers();  // 延迟（lazy）创建 handler
         } elseif (!is_array($handlers)) {
             $handlers = [$handlers];
         }
@@ -72,6 +71,7 @@ class Log
             self::$defaultCfgCache = [
                 "handlers"   => [
                     new StreamHandler(root_path("storage/logs/app.log"), Logger::DEBUG),
+                    new StreamHandler('php://stdout', Logger::DEBUG),
                 ],
                 "processors" => [
                     MemoryUsageProcessor::class

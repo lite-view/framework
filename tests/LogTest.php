@@ -44,13 +44,13 @@ class LogTest extends TestCase
             ],
         ]);
 
-        Log::employ('test')->info('1');
-        Log::employ('test')->info('1');
-        Log::employ('test2')->info('2');
-        Log::employ('test2')->info('2');
-        Log::employ('test3')->info('3');
-        Log::employ('test3')->info('3');
-//        Log::info('info');
+        Log::channel('test')->info('1');
+        Log::channel('test')->info('1');
+        Log::channel('test2')->info('2');
+        Log::channel('test2')->info('2');
+        Log::channel('test3')->info('3');
+        Log::channel('test3')->info('3');
+        Log::info('info');
         $this->assertEquals(1, 1);
     }
 }

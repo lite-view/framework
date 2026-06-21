@@ -3,14 +3,11 @@
 const WORKING_DIR = __FILE__;
 require_once __DIR__ . '/vendor/autoload.php';
 
-use LiteView\Exception\NotFoundException;
 use LiteView\Kernel\Route;
 use LiteView\Kernel\View;
 use LiteView\Kernel\Visitor;
 use LiteView\Support\ApiResourceController;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
-use Monolog\Processor\MemoryUsageProcessor;
+
 
 class DemoController extends ApiResourceController
 {
@@ -44,15 +41,6 @@ class LogMiddleware
 {
     public function handle(Visitor $v, $next)
     {
-        \LiteView\Support\ToolMan::setCfg('logging', ['default' => [
-            "handlers"   => [
-                new StreamHandler(root_path("storage/logs/main.log"), Logger::DEBUG),
-            ],
-            "processors" => [
-                MemoryUsageProcessor::class
-            ]
-        ]]);
-
         \LiteView\Support\Log::info('request', ['path' => $v->currentPath()]);
         return $next($v);
     }
