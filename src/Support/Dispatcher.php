@@ -4,13 +4,14 @@
 namespace LiteView\Support;
 
 
+use LiteView\Exception\ExceptionManager;
 use LiteView\Kernel\Visitor;
 
 
 class Dispatcher
 {
-    public static $exceptionManager;
-    public static $error_display = '系统繁忙';
+    public static ?ExceptionManager $exceptionManager = null;
+    public static string $error_display = '系统繁忙';
 
     // 根据环境加载配置
     public static function checkEnv()
