@@ -92,16 +92,20 @@ class Visitor
     {
         if (null === $this->inputCache) {
             $input = array_merge($_GET, $_POST, $this->data);
+            // 读取json
             $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
             if (stripos($contentType, 'application/json') !== false) {
-                $rawInput = file_get_contents("php://input");
-                $json = json_decode($rawInput, true);
-                if (is_array($json)) {
-                    $input = array_merge($input, $json);
+                $rawInput = @file_get_contents("php://input"); // 防止waring
+                if ($rawInput !== false) {
+                    $json = json_decode($rawInput, true);
+                    if (is_array($json)) {
+                        $input = array_merge($input, $json);
+                    }
                 }
             }
             $this->inputCache = $input;
         }
+
         if (is_null($key)) {
             return new ArrayObject($this->inputCache, ArrayObject::ARRAY_AS_PROPS);
         }
